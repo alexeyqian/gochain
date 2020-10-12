@@ -1,4 +1,4 @@
-package Ledger
+package ledger_s
 
 import (
 	"os"
@@ -10,8 +10,8 @@ import (
 const BlockSizeBits  = 32
 const IndexRecordSize = 12 // index record bytes
 
-const ledgerFileName = "Ledger"
-const ledgerIndexFileName = "Ledger.index"
+const ledgerFileName = "ledger"
+const ledgerIndexFileName = "ledger.index"
 
 type ledgerRecord struct{
 	Size uint32 // size of ledger record
@@ -23,7 +23,7 @@ type indexRecord struct{
 	Size uint32 // size of ledger record
 }
 
-type Ledger struct{
+type ledger_s struct{
 	ledgerPath string	
 	indexPath string	
 	ledger *os.File
@@ -33,12 +33,32 @@ type Ledger struct{
 	isReadOny bool
 }
 
-func OpenLedger(dir string) {
-	var lg Ledger
-	lg.open(dir)
+// ========== global variables ==============
+var glgr ledger_s
+
+// ========== public functions ==============
+func Open(dir string) {
+	glgr.open(dir)
 }
 
-func (lg *Ledger) open(dirPath string){	
+func Close(){
+	glgr.close()
+}
+
+func Remove(){
+	glgr.remove()
+}
+
+func Append(blockData []byte){
+	glgr.append(blockData)
+}
+
+func Read(bno int) []byte{
+	return glgr.read(bno)
+}
+
+// ========== private functions ==============
+func (lg *ledger_s) open(dirPath string){	
 	lg.ledgerPath = filepath.Join(dirPath, ledgerFileName);
 	lg.indexPath = filepath.Join(dirPath, ledgerIndexFileName)
 	var err error
@@ -72,7 +92,7 @@ func (lg *Ledger) open(dirPath string){
 	lg.isReadOny = false	
 }
 
-func (lg *Ledger) close(){
+func (lg *ledger_s) close(){
 	lg.isOpen = false
 	lg.ledger.Sync() 	
 	lg.ledger.Close()
@@ -80,7 +100,7 @@ func (lg *Ledger) close(){
 	lg.index.Close()
 }
 
-func (lg *Ledger) remove() {
+func (lg *ledger_s) remove() {
 	var err error
 	if !lg.isOpen {
 		err = os.Remove(lg.ledgerPath)
@@ -94,7 +114,7 @@ func (lg *Ledger) remove() {
 // ledger: ledger_record_0 | ledger_record_1 | ledger_record_2 | ...
 // index:  index_record_0  | index_record_1  | index_record_2  | ...
 // ledger_record_0 is a dummy record
-func (lg *Ledger) append(blockData []byte){
+func (lg *ledger_s) append(blockData []byte){
 	var err error
 
 	if !lg.isOpen || lg.isReadOny {
@@ -126,7 +146,7 @@ func (lg *Ledger) append(blockData []byte){
 	_, err = lg.index.Write(ibytes.Bytes())
 	check(err)
 
-	// append block to Ledger
+	// append block to ledger_s
 	// os.File.Write is unbufferred, so no flush needed, 
 	// but still need Sync to make sure operating system's file system call system call
 	// to write data to disk
@@ -134,7 +154,7 @@ func (lg *Ledger) append(blockData []byte){
 	lg.index.Sync()
 }
 
-func (lg *Ledger) read(bno int) []byte{	
+func (lg *ledger_s) read(bno int) []byte{	
 	var err error
 	var indexData, ledgerData []byte
 

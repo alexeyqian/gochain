@@ -1,7 +1,11 @@
 package main
-import "fmt"
-import "time"
-import "./ledger"
+import (
+	"fmt"
+	"time"
+	ledger "github.com/alexeyqian/gochain/ledger"
+	core "github.com/alexeyqian/gochain/core"
+)
+
 /*
 func createUuid() string{
 	b := make([]byte, 16)
@@ -76,8 +80,13 @@ func main(){
 	now := time.Now() 
 	sec := now.Unix()
 	fmt.Println("sec: %v", sec)
-	var lg ledger.Ledger
-	//ledger.OpenLedger("data")
+	ledger.Open("data")
+	b := core.Block{Id: "block_id", Num: 1}
+	bdata := core.SerializeBlock(&b)
+	ledger.Append(bdata)	
+	br := ledger.Read(0)
+	fmt.Println(br)
+	ledger.Close()
 	fmt.Println("success")
 }
 

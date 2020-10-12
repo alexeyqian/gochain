@@ -1,4 +1,7 @@
 package core
+import (
+	"encoding/json"
+)
 
 type GlobalProperties struct{
 	bno int
@@ -26,8 +29,8 @@ type Transaction struct{
 }
 
 type Block struct{
-	id string
-	no int
+	Id string
+	Num int
 }
 
 type Chain struct{
@@ -36,5 +39,16 @@ type Chain struct{
 }
 
 func (b Block) String() string{
-	return b.id
+	return b.Id
+}
+
+func SerializeBlock(b *Block) []byte{
+	data, _ := json.Marshal(*b)
+	return data
+}
+
+func UnSerializeBlock(data []byte) Block{
+	var b Block
+	json.Unmarshal(data, &b)
+	return b
 }
