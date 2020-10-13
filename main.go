@@ -1,23 +1,15 @@
 package main
+
 import (
 	"fmt"
 	"time"
-	ledger "github.com/alexeyqian/gochain/ledger"
+
 	core "github.com/alexeyqian/gochain/core"
+	ledger "github.com/alexeyqian/gochain/ledger"
+	utils "github.com/alexeyqian/gochain/utils"
 )
 
 /*
-func createUuid() string{
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-	//fmt.Println(uuid)
-	return uuid
-}
 
 func newChain() *chain{
 	c := chain{id: "guid-xxx", version: "0.0.1"}
@@ -75,18 +67,20 @@ func appendBlock(){
 
 }
 */
-func main(){
-	fmt.Println("hello world!")
-	now := time.Now() 
-	sec := now.Unix()
-	fmt.Println("sec: %v", sec)
-	ledger.Open("data")
-	b := core.Block{Id: "block_id", Num: 1}
-	bdata := core.SerializeBlock(&b)
-	ledger.Append(bdata)	
-	br := ledger.Read(0)
-	fmt.Println(br)
-	ledger.Close()
-	fmt.Println("success")
-}
+func main() {
+	fmt.Printf("starting ...\n")
 
+	priv := utils.GenerateKey()
+	fmt.Printf("private key: %v\n", priv)
+	fmt.Printf("public key: %v\n", priv.PublicKey)
+
+	ledger.Open("test_data")
+	sec := time.Now().Unix()
+	b := core.Block{Id: utils.CreateUuid(), Num: 0, CreatedOn: uint64(sec), Witness: "init_miner"}
+	ledger.Append(core.SerializeBlock(&b))
+	br := ledger.Read(0)
+	fmt.Printf("%+v\n", core.UnSerializeBlock(br))
+	ledger.Close()
+	ledger.Remove()
+	fmt.Println("done")
+}
