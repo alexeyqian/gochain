@@ -1,8 +1,11 @@
 package core
 
 type Transactioner interface {
-	Evaluate()
+	TxType() string
 }
+
+const CreateAccountTransactionType = "CreateAccountTransactionType"
+const TransferCoinTransactionType = "TransferCoinTransactionType"
 
 type CreateAccountTransaction struct {
 	AccountId   string
@@ -13,10 +16,16 @@ type CreateAccountTransaction struct {
 	Signature   string // should be [SIGBITS]byte
 }
 
-func (t CreateAccountTransaction) Evaluate() {
-	return
+func (tx CreateAccountTransaction) TxType() string {
+	return CreateAccountTransactionType
 }
 
-func SignTransaction(tx *Transactioner) {
+type TransferCoinTransaction struct {
+	From   string
+	To     string
+	Amount uint64
+}
 
+func (tx TransferCoinTransaction) TxType() string {
+	return TransferCoinTransactionType
 }
