@@ -8,17 +8,32 @@ import (
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
-func TestTransfer(t *testing.T) {
-	chain.Open()
+func TestCreateAccount(t *testing.T) {
+	chain.Open(TestDataDir)
 
 	statusdb.AddPendingTx(TstCreateAccount("alice"))
+	chain.GenerateBlock()
+
+	acc := statusdb.GetAccount("alice")
+	if acc.Name != "alice" {
+		t.Errorf("create account faile")
+	}
+
+	chain.Close()
+	chain.Remove()
+}
+
+func TestTransfer(t *testing.T) {
+	chain.Open(TestDataDir)
+
+	statusdb.AddPendingTx(TstCreateAccount("alice"))
+	chain.GenerateBlock()
 
 	var tx core.TransferCoinTransaction
 	tx.From = "init"
 	tx.To = "alice"
 	tx.Amount = 100
 	statusdb.AddPendingTx(tx)
-
 	chain.GenerateBlock()
 
 	acc := statusdb.GetAccount("alice")
@@ -27,4 +42,5 @@ func TestTransfer(t *testing.T) {
 	}
 
 	chain.Close()
+	chain.Remove()
 }

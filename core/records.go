@@ -1,14 +1,17 @@
 package core
 
 const InitWitness = "init"
+const InitAmount = 100
+const AmountPerBlock = 100
 
 type Gpo struct {
-	BlockId   string
-	BlockNum  int
-	Witness   string
-	CreatedOn uint64
-	Version   string
-	Supply    uint64
+	PrevBlockId string
+	BlockId     string
+	BlockNum    uint64
+	Witness     string
+	Time        uint64
+	Version     string
+	Supply      uint64
 }
 
 type Witness struct {

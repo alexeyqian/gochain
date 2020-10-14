@@ -7,6 +7,8 @@ import (
 	utils "github.com/alexeyqian/gochain/utils"
 )
 
+const TestDataDir = "data"
+
 func TstCreateAccount(name string) core.Transactioner {
 	var tx core.CreateAccountTransaction
 	tx.AccountId = utils.CreateUuid()

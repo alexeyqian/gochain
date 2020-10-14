@@ -1,6 +1,8 @@
 package statusdb
 
-import "github.com/alexeyqian/gochain/core"
+import (
+	"github.com/alexeyqian/gochain/core"
+)
 
 var _gpo core.Gpo
 var _accounts []core.Account
