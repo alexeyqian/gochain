@@ -20,10 +20,6 @@ func CreateUuid() string {
 	return uuid
 }
 
-func GenerateKey() *ecdsa.PrivateKey {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-	return privateKey
+func GenerateKey() (*ecdsa.PrivateKey, error) {
+	return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 }

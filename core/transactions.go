@@ -6,6 +6,7 @@ type Transactioner interface {
 
 const CreateAccountTransactionType = "CreateAccountTransactionType"
 const TransferCoinTransactionType = "TransferCoinTransactionType"
+const CreateArticleTransactionType = "CreateArticleTransactionType"
 
 type CreateAccountTransaction struct {
 	AccountId   string
@@ -28,4 +29,17 @@ type TransferCoinTransaction struct {
 
 func (tx TransferCoinTransaction) TxType() string {
 	return TransferCoinTransactionType
+}
+
+type CreateArticleTransaction struct {
+	ArticleId string
+	Author    string
+	Title     string
+	Body      string
+	Meta      string
+	CreatedOn uint64
+}
+
+func (tx CreateArticleTransaction) TxType() string {
+	return CreateArticleTransactionType
 }

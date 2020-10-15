@@ -8,21 +8,21 @@ const MaxTransactionsInBlock = 10
 
 type Block struct {
 	Id           string
+	PrevBlockId  string
 	Num          uint64
 	CreatedOn    uint64
 	Witness      string
 	Transactions []Transactioner
 }
 
-func SerializeBlock(b *Block) []byte {
-	data, _ := json.Marshal(*b)
-	return data
+func SerializeBlock(b *Block) ([]byte, error) {
+	return json.Marshal(*b)
 }
 
-func UnSerializeBlock(data []byte) Block {
+func UnSerializeBlock(data []byte) (*Block, error) {
 	var b Block
 	json.Unmarshal(data, &b)
-	return b
+	return &b, nil
 }
 
 func (b *Block) AddTransaction(t Transactioner) {

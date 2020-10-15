@@ -11,7 +11,7 @@ import (
 func TestCreateAccount(t *testing.T) {
 	chain.Open(TestDataDir)
 
-	statusdb.AddPendingTx(TstCreateAccount("alice"))
+	chain.AddPendingTx(TstCreateAccount("alice"))
 	chain.GenerateBlock()
 
 	acc := statusdb.GetAccount("alice")
@@ -26,19 +26,68 @@ func TestCreateAccount(t *testing.T) {
 func TestTransfer(t *testing.T) {
 	chain.Open(TestDataDir)
 
-	statusdb.AddPendingTx(TstCreateAccount("alice"))
+	chain.AddPendingTx(TstCreateAccount("alice"))
 	chain.GenerateBlock()
 
 	var tx core.TransferCoinTransaction
 	tx.From = "init"
 	tx.To = "alice"
 	tx.Amount = 100
-	statusdb.AddPendingTx(tx)
+	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
 	acc := statusdb.GetAccount("alice")
 	if acc.Coin != 100 {
 		t.Errorf("expected: %d, actual: %d", 100, acc.Coin)
+	}
+
+	chain.Close()
+	chain.Remove()
+}
+
+func TestInvalidTxWillBeIgnored(t *testing.T) {
+	chain.Open(TestDataDir)
+
+	var tx core.CreateAccountTransaction
+	tx.AccountName = ""
+	err := chain.AddPendingTx(tx)
+
+	if err == nil {
+		t.Errorf("cannot detect invalid tx")
+	}
+
+	if len(statusdb.GetPendingTransactions()) != 0 {
+		t.Errorf("should not add invalid tx to pending tx list")
+	}
+
+	chain.Close()
+	chain.Remove()
+}
+
+func TestTransferNoSufficientFund(t *testing.T) {
+	chain.Open(TestDataDir)
+
+	chain.AddPendingTx(TstCreateAccount("alice"))
+	chain.GenerateBlock()
+
+	var tx core.TransferCoinTransaction
+	tx.From = "init"
+	tx.To = "alice"
+	tx.Amount = 10000
+	err := chain.AddPendingTx(tx)
+
+	if err == nil {
+		t.Errorf("transfer not sufficent found, cannot detect error")
+	}
+
+	accInit := statusdb.GetAccount(core.InitWitness)
+	if accInit.Coin != core.InitAmount {
+		t.Errorf("expected: %d, actual: %d", core.InitAmount, accInit.Coin)
+	}
+
+	accAlice := statusdb.GetAccount("alice")
+	if accAlice.Coin != 0 {
+		t.Errorf("expected: %d, actual: %d", 0, accAlice.Coin)
 	}
 
 	chain.Close()

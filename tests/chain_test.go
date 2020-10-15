@@ -31,6 +31,11 @@ func TestGenesis(t *testing.T) {
 		t.Errorf("init account error.")
 	}
 
+	b, _ := chain.GetBlock(0)
+	if b.Num != 0 {
+		t.Errorf("genesis zero block not generated")
+	}
+
 	chain.Close()
 	chain.Remove()
 }
@@ -42,12 +47,13 @@ func TestGenerateBlock(t *testing.T) {
 	countx := 20
 	for i < countx {
 		tx := TstCreateAccount(fmt.Sprintf("test_account_name_%d", i))
-		statusdb.AddPendingTx(tx)
+		chain.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		i++
 	}
 
-	b := chain.GenerateBlock()
+	tempb := chain.GenerateBlock()
+	b, _ := chain.GetBlock(int(tempb.Num))
 
 	gpo := statusdb.GetGpo()
 	if gpo.BlockNum != 1 || gpo.BlockId != b.Id {
@@ -62,7 +68,7 @@ func TestGenerateBlock(t *testing.T) {
 		t.Errorf("generate block error: transactions are not right, actual: %d", len(b.Transactions))
 	}
 
-	if len(statusdb.GetPendingTxs()) != countx-core.MaxTransactionsInBlock {
+	if len(statusdb.GetPendingTransactions()) != countx-core.MaxTransactionsInBlock {
 		t.Errorf("generate block error: pending txs are not right")
 	}
 
@@ -86,7 +92,7 @@ func TestGenerateBlocks(t *testing.T) {
 	i := 1
 	for i <= 20 {
 		tx := TstCreateAccount(fmt.Sprintf("test_account_name_%d", i))
-		statusdb.AddPendingTx(tx)
+		chain.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		b := chain.GenerateBlock()
 		if b.Num != uint64(i) {
@@ -108,7 +114,8 @@ func TestGenerateBlocks(t *testing.T) {
 		}
 
 		// TODO: validate block and previous block hash/linking
-		prevb := chain.GetBlock(uint64(i - 1))
+		prevb, _ := chain.GetBlock(i - 1)
+		//fmt.Printf("prevb id: %s", prevb.Id)
 		if b.PrevBlockId != prevb.Id {
 			t.Errorf("block linking is broken")
 		}

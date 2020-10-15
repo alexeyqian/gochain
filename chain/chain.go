@@ -16,7 +16,7 @@ var _isGenesised = false
 func Open(dir string) {
 	_dataFolder = dir
 	ledger.Open(dir)
-	// statusdb.Open()
+	statusdb.Open()
 	if !_isGenesised {
 		genesis()
 	}
@@ -24,27 +24,51 @@ func Open(dir string) {
 
 func Close() {
 	ledger.Close()
-	//statusdb.Close()
+	statusdb.Close()
 }
 
 func Remove() {
 	ledger.Remove()
-	//statusdb.Remove()
+	statusdb.Remove()
+}
+
+func GetBlock(num int) (*core.Block, error) {
+	// TODO: use cache to speed up reading
+	bs, err := ledger.Read(num)
+	if err != nil {
+		return nil, err
+	}
+	return core.UnSerializeBlock(bs)
 }
 
 func BroadcastTx(tx core.Transactioner) {
 	// broadcast to other peers
 }
 
+func AddPendingTx(tx core.Transactioner) error {
+	err := eval.Validate(tx)
+	if err == nil {
+		statusdb.AddPendingTransaction(tx)
+	}
+	return err
+}
+
 func GenerateBlock() *core.Block {
 	var b core.Block
 	b.Id = utils.CreateUuid()
+	b.PrevBlockId = statusdb.GetGpo().BlockId
 	b.Num = statusdb.GetGpo().BlockNum + uint64(1)
 	sec := time.Now().Unix()
 	b.CreatedOn = uint64(sec)
-	statusdb.MovePendingTxsToBlock(&b)
+	statusdb.MovePendingTransactionsToBlock(&b)
 
-	applyBlock(&b)
+	for _, tx := range b.Transactions {
+		terr := eval.Apply(tx)
+		if terr != nil {
+			// move tx to invalid tx
+			//
+		}
+	}
 
 	// update gpo
 	gpo := statusdb.GetGpo()
@@ -52,34 +76,33 @@ func GenerateBlock() *core.Block {
 	gpo.BlockNum = b.Num
 	gpo.Time = b.CreatedOn
 	gpo.Supply += core.AmountPerBlock
+
+	// append new block to ledger
+	sb, _ := core.SerializeBlock(&b)
+	ledger.Append(sb)
+
 	return &b
 }
 
-func applyBlock(b *core.Block) {
-	for _, tx := range b.Transactions {
-		eval.Apply(tx)
-	}
-}
-
 func genesis() {
-	// create dummp block and push it to ledger
-	// TODO
-
 	// update global status
-	bid := utils.CreateUuid()
-	createdOn := uint64(time.Now().Unix())
 	gpo := statusdb.GetGpo()
-	gpo.BlockId = bid
+	gpo.BlockId = core.BlockZeroId
 	gpo.BlockNum = 0
 	gpo.Witness = core.InitWitness
-	gpo.Time = createdOn
+	gpo.Time = core.GenesisTime
 	gpo.Supply = core.InitAmount
 
 	// update chain database
 	var acc core.Account
 	acc.Id = utils.CreateUuid() // should be public key string
 	acc.Name = core.InitWitness
-	acc.CreatedOn = createdOn
+	acc.CreatedOn = core.GenesisTime
 	acc.Coin = core.InitAmount
 	statusdb.AddAccount(acc)
+
+	// update ledger, create a dummy block 0
+	b := core.Block{Id: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
+	sb, _ := core.SerializeBlock(&b)
+	ledger.Append(sb)
 }
