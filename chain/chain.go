@@ -68,7 +68,7 @@ func movePendingTransactionsToBlock(b *core.Block) {
 }
 
 func AddPendingTx(tx core.Transactioner) error {
-	err := core.Validate(tx)
+	err := tx.Validate()
 	if err == nil {
 		_pendingTransactions = append(_pendingTransactions, tx)
 	}
@@ -85,7 +85,7 @@ func GenerateBlock() *core.Block {
 	movePendingTransactionsToBlock(&b)
 
 	for _, tx := range b.Transactions {
-		terr := core.Apply(tx)
+		terr := tx.Apply()
 		if terr != nil {
 			// move tx to invalid tx
 			//
