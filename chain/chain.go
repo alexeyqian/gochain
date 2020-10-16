@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/entity"
 	"github.com/alexeyqian/gochain/eval"
 	"github.com/alexeyqian/gochain/ledger"
 	"github.com/alexeyqian/gochain/statusdb"
@@ -94,7 +95,7 @@ func genesis() {
 	gpo.Supply = core.InitAmount
 
 	// update chain database
-	var acc core.Account
+	var acc entity.Account
 	acc.Id = utils.CreateUuid() // should be public key string
 	acc.Name = core.InitWitness
 	acc.CreatedOn = core.GenesisTime

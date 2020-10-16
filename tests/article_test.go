@@ -2,6 +2,7 @@ package tests
 
 import (
 	"testing"
+	"time"
 
 	"github.com/alexeyqian/gochain/utils"
 
@@ -13,7 +14,7 @@ import (
 func TestCreateArticle(t *testing.T) {
 	chain.Open(TestDataDir)
 
-	chain.AddPendingTx(TstCreateAccount("alice"))
+	chain.AddPendingTx(CreateTestAccount("alice"))
 	chain.GenerateBlock()
 
 	var tx core.CreateArticleTransaction
@@ -25,7 +26,7 @@ func TestCreateArticle(t *testing.T) {
 	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
-	acc := statusdb.GetAccount("alice")
+	acc := statusdb.GetAccountByName("alice")
 	if acc.ArticleCount != 1 {
 		t.Errorf("create article >>> article count expected: %d, actual: %d", 1, acc.ArticleCount)
 	}
@@ -46,7 +47,39 @@ func TestCreateArticle(t *testing.T) {
 }
 
 func TestCreateComment(t *testing.T) {
+	chain.Open(TestDataDir)
 
+	chain.AddPendingTx(CreateTestAccount("alice"))
+	chain.AddPendingTx(CreateTestAccount("bob"))
+	chain.GenerateBlock()
+	chain.AddPendingTx(CreateTestArticle("test_article_001", "alice", "test_aritcle_title"))
+	chain.GenerateBlock()
+
+	var tx core.CreateCommentTransaction
+	tx.ParentId = "test_article_001"
+	tx.CommentId = "test_comment_001"
+	tx.Body = "comment_test_body"
+	tx.Commentor = "bob"
+	tx.CreatedOn = uint64(time.Now().Unix())
+	chain.AddPendingTx(tx)
+	chain.GenerateBlock()
+
+	comments := statusdb.GetComments()
+	if comments == nil || len(comments) != 1 {
+		t.Errorf("create comment error")
+	}
+
+	comment := statusdb.GetComment(tx.CommentId)
+	if comment == nil || comment.Body != "comment_test_body" {
+		t.Errorf("create and get comment error")
+	}
+
+	if comment.ParentId != "test_article_001" {
+		t.Errorf("create comment parent error")
+	}
+
+	chain.Close()
+	chain.Remove()
 }
 
 // TestCreateNestedComment -> comment level <= 5

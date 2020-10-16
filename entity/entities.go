@@ -1,11 +1,4 @@
-package core
-
-const InitWitness = "init"
-const InitAmount = 100
-const AmountPerBlock = 100
-const BlockInterval = 3 // seconds
-const BlockZeroId = "00000000-0000-0000-000000000000"
-const GenesisTime = 1632830400 //Date and time (GMT): Tuesday, September 28, 2021 12:00:00 PM
+package entity
 
 type Gpo struct {
 	BlockId  string
@@ -28,6 +21,9 @@ type Account struct {
 	Coin         uint64
 	Vest         uint64
 	Credit       uint64
+	UpVotes      uint32
+	DownVotes    uint32
+	VotePower    uint64
 	ArticleCount uint64
 }
 
@@ -37,4 +33,27 @@ type Article struct {
 	Title     string
 	Body      string
 	Meta      string
+	UpVotes   uint32
+	DownVotes uint32
+	VotePower uint64
+}
+
+type Comment struct {
+	ParentId  string
+	CommentId string
+	Commentor string
+	Body      string
+	CreatedOn uint64
+	UpVotes   uint32
+	DownVotes uint32
+	VotePower uint64
+}
+
+type Vote struct {
+	Id         string
+	ParentId   string
+	ParentType string
+	Direction  int8
+	VotePower  uint64
+	Voter      string
 }

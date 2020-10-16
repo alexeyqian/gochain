@@ -46,7 +46,7 @@ func TestGenerateBlock(t *testing.T) {
 	i := 0
 	countx := 20
 	for i < countx {
-		tx := TstCreateAccount(fmt.Sprintf("test_account_name_%d", i))
+		tx := CreateTestAccount(fmt.Sprintf("test_account_name_%d", i))
 		chain.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		i++
@@ -75,7 +75,7 @@ func TestGenerateBlock(t *testing.T) {
 	i = 0
 	for i < core.MaxTransactionsInBlock {
 		accName := fmt.Sprintf("test_account_name_%d", i)
-		acc := statusdb.GetAccount(accName)
+		acc := statusdb.GetAccountByName(accName)
 		if acc == nil || acc.Name != accName {
 			t.Errorf("cannot find account name: %s", accName)
 		}
@@ -91,7 +91,7 @@ func TestGenerateBlocks(t *testing.T) {
 
 	i := 1
 	for i <= 20 {
-		tx := TstCreateAccount(fmt.Sprintf("test_account_name_%d", i))
+		tx := CreateTestAccount(fmt.Sprintf("test_account_name_%d", i))
 		chain.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		b := chain.GenerateBlock()
