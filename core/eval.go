@@ -1,25 +1,24 @@
-package eval
+package core
 
 import (
 	"errors"
 
-	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
-func Validate(tx core.Transactioner) error {
+func Validate(tx Transactioner) error {
 	txType := tx.TxType()
 	var err error
 	switch txType {
-	case core.CreateAccountTransactionType:
-		t := tx.(core.CreateAccountTransaction)
+	case CreateAccountTransactionType:
+		t := tx.(CreateAccountTransaction)
 		if t.AccountName == "" {
 			err = errors.New("name cannot be empty.")
 		}
 
-	case core.TransferCoinTransactionType:
-		t := tx.(core.TransferCoinTransaction)
+	case TransferCoinTransactionType:
+		t := tx.(TransferCoinTransaction)
 		//fmt.Printf("from: %s, to: %s\n", tct.From, tct.To)
 		fromAcc := statusdb.GetAccountByName(t.From)
 		toAcc := statusdb.GetAccountByName(t.To)
@@ -38,7 +37,7 @@ func Validate(tx core.Transactioner) error {
 	return err
 }
 
-func Apply(tx core.Transactioner) error {
+func Apply(tx Transactioner) error {
 	err := Validate(tx)
 	if err != nil {
 		return err
@@ -46,15 +45,15 @@ func Apply(tx core.Transactioner) error {
 
 	txType := tx.TxType()
 	switch txType {
-	case core.CreateAccountTransactionType:
-		cat := tx.(core.CreateAccountTransaction)
+	case CreateAccountTransactionType:
+		cat := tx.(CreateAccountTransaction)
 		var acc entity.Account
 		acc.Id = cat.AccountId
 		acc.Name = cat.AccountName
 
 		statusdb.AddAccount(acc)
-	case core.TransferCoinTransactionType:
-		tct := tx.(core.TransferCoinTransaction)
+	case TransferCoinTransactionType:
+		tct := tx.(TransferCoinTransaction)
 		//fmt.Printf("from: %s, to: %s\n", tct.From, tct.To)
 		fromAcc := statusdb.GetAccountByName(tct.From)
 		toAcc := statusdb.GetAccountByName(tct.To)
@@ -71,8 +70,8 @@ func Apply(tx core.Transactioner) error {
 		fromAcc.Coin -= tct.Amount
 		toAcc.Coin += tct.Amount
 
-	case core.CreateArticleTransactionType:
-		t := tx.(core.CreateArticleTransaction)
+	case CreateArticleTransactionType:
+		t := tx.(CreateArticleTransaction)
 		var article entity.Article
 		article.ArticleId = t.ArticleId
 		article.Author = t.Author
@@ -84,8 +83,8 @@ func Apply(tx core.Transactioner) error {
 		acc := statusdb.GetAccountByName(t.Author)
 		acc.ArticleCount += 1
 
-	case core.CreateCommentTransactionType:
-		t := tx.(core.CreateCommentTransaction)
+	case CreateCommentTransactionType:
+		t := tx.(CreateCommentTransaction)
 		var comment entity.Comment
 		comment.ParentId = t.ParentId
 		comment.CommentId = t.CommentId
@@ -94,8 +93,8 @@ func Apply(tx core.Transactioner) error {
 		comment.CreatedOn = t.CreatedOn
 		statusdb.AddComment(comment)
 
-	case core.VoteTransactionType:
-		t := tx.(core.VoteTransaction)
+	case VoteTransactionType:
+		t := tx.(VoteTransaction)
 
 		var vote entity.Vote
 		vote.Id = t.Id
@@ -105,7 +104,7 @@ func Apply(tx core.Transactioner) error {
 		vote.VotePower = t.VotePower
 		statusdb.AddVote(vote)
 
-		if vote.ParentType == core.VoteParentTypeAccount {
+		if vote.ParentType == VoteParentTypeAccount {
 			account := statusdb.GetAccount(vote.ParentId)
 			if account == nil {
 				return errors.New("vote account not exist")
@@ -118,7 +117,7 @@ func Apply(tx core.Transactioner) error {
 				account.VotePower -= vote.VotePower
 			}
 
-		} else if vote.ParentType == core.VoteParentTypeArticle {
+		} else if vote.ParentType == VoteParentTypeArticle {
 			article := statusdb.GetArticle(vote.ParentId)
 			if article == nil {
 				return errors.New("vote articel not exist")
@@ -131,7 +130,7 @@ func Apply(tx core.Transactioner) error {
 				article.VotePower -= vote.VotePower
 			}
 
-		} else if vote.ParentType == core.VoteParentTypeComment {
+		} else if vote.ParentType == VoteParentTypeComment {
 			comment := statusdb.GetComment(vote.ParentId)
 			if comment == nil {
 				return errors.New("vote comment not exist")

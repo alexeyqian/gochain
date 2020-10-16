@@ -1,14 +1,12 @@
 package statusdb
 
 import (
-	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
 )
 
 var _lastSavedPoint int = 0 // used for fast replay from giving point
 var _gpo entity.Gpo
 var _accounts []entity.Account
-var _pendingTransactions []core.Transactioner
 var _articles []entity.Article
 var _comments []entity.Comment
 var _votes []entity.Vote
@@ -25,35 +23,10 @@ func Remove() {
 	// reset all data
 	_gpo = entity.Gpo{}
 	_accounts = nil
-	_pendingTransactions = nil
 }
 
 func GetGpo() *entity.Gpo {
 	return &_gpo
-}
-
-func GetPendingTransactions() []core.Transactioner {
-	return _pendingTransactions
-}
-
-// TODO: should only be alowwed to invoke from chain package
-func AddPendingTransaction(tx core.Transactioner) {
-	_pendingTransactions = append(_pendingTransactions, tx)
-}
-
-func MovePendingTransactionsToBlock(b *core.Block) {
-	i := 0
-	for _, tx := range _pendingTransactions {
-		if i >= core.MaxTransactionsInBlock {
-			break
-		}
-		b.AddTransaction(tx)
-		i++
-	}
-
-	if len(_pendingTransactions) > core.MaxTransactionsInBlock {
-		_pendingTransactions = _pendingTransactions[core.MaxTransactionsInBlock:]
-	}
 }
 
 func AddAccount(acc entity.Account) {

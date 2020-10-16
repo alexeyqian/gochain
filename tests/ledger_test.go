@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/ledger"
-	utils "github.com/alexeyqian/gochain/utils"
+	"github.com/alexeyqian/gochain/utils"
 )
 
 func TestLedgerAppendSingle(t *testing.T) {

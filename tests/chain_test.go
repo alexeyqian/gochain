@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/alexeyqian/gochain/chain"
-	core "github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
@@ -68,7 +68,7 @@ func TestGenerateBlock(t *testing.T) {
 		t.Errorf("generate block error: transactions are not right, actual: %d", len(b.Transactions))
 	}
 
-	if len(statusdb.GetPendingTransactions()) != countx-core.MaxTransactionsInBlock {
+	if len(chain.GetPendingTx()) != countx-core.MaxTransactionsInBlock {
 		t.Errorf("generate block error: pending txs are not right")
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
-	"github.com/alexeyqian/gochain/eval"
 	"github.com/alexeyqian/gochain/ledger"
 	"github.com/alexeyqian/gochain/statusdb"
 	"github.com/alexeyqian/gochain/utils"
@@ -13,6 +12,8 @@ import (
 
 var _dataFolder string = "data"
 var _isGenesised = false
+
+var _pendingTransactions []core.Transactioner
 
 func Open(dir string) {
 	_dataFolder = dir
@@ -31,6 +32,7 @@ func Close() {
 func Remove() {
 	ledger.Remove()
 	statusdb.Remove()
+	_pendingTransactions = nil
 }
 
 func GetBlock(num int) (*core.Block, error) {
@@ -46,10 +48,29 @@ func BroadcastTx(tx core.Transactioner) {
 	// broadcast to other peers
 }
 
+func GetPendingTx() []core.Transactioner {
+	return _pendingTransactions
+}
+
+func movePendingTransactionsToBlock(b *core.Block) {
+	i := 0
+	for _, tx := range _pendingTransactions {
+		if i >= core.MaxTransactionsInBlock {
+			break
+		}
+		b.AddTransaction(tx)
+		i++
+	}
+
+	if len(_pendingTransactions) > core.MaxTransactionsInBlock {
+		_pendingTransactions = _pendingTransactions[core.MaxTransactionsInBlock:]
+	}
+}
+
 func AddPendingTx(tx core.Transactioner) error {
-	err := eval.Validate(tx)
+	err := core.Validate(tx)
 	if err == nil {
-		statusdb.AddPendingTransaction(tx)
+		_pendingTransactions = append(_pendingTransactions, tx)
 	}
 	return err
 }
@@ -61,10 +82,10 @@ func GenerateBlock() *core.Block {
 	b.Num = statusdb.GetGpo().BlockNum + uint64(1)
 	sec := time.Now().Unix()
 	b.CreatedOn = uint64(sec)
-	statusdb.MovePendingTransactionsToBlock(&b)
+	movePendingTransactionsToBlock(&b)
 
 	for _, tx := range b.Transactions {
-		terr := eval.Apply(tx)
+		terr := core.Apply(tx)
 		if terr != nil {
 			// move tx to invalid tx
 			//

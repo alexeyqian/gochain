@@ -3,8 +3,8 @@ package tests
 import (
 	"time"
 
-	core "github.com/alexeyqian/gochain/core"
-	utils "github.com/alexeyqian/gochain/utils"
+	"github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/utils"
 )
 
 const TestDataDir = "data"

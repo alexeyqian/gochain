@@ -56,7 +56,7 @@ func TestInvalidTxWillBeIgnored(t *testing.T) {
 		t.Errorf("cannot detect invalid tx")
 	}
 
-	if len(statusdb.GetPendingTransactions()) != 0 {
+	if len(chain.GetPendingTx()) != 0 {
 		t.Errorf("should not add invalid tx to pending tx list")
 	}
 

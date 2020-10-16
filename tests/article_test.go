@@ -4,11 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexeyqian/gochain/utils"
-
 	"github.com/alexeyqian/gochain/chain"
-	core "github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/statusdb"
+	"github.com/alexeyqian/gochain/utils"
 )
 
 func TestCreateArticle(t *testing.T) {
