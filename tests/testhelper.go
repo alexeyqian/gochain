@@ -14,7 +14,6 @@ func CreateTestAccount(name string) core.Transactioner {
 	tx.AccountId = utils.CreateUuid()
 	tx.AccountName = name
 	tx.CreatedOn = uint64(time.Now().Unix())
-	tx.ExpiredOn = tx.CreatedOn + uint64(1000000)
 	return tx
 }
 
