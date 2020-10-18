@@ -48,6 +48,13 @@ func BroadcastTx(tx core.Transactioner) {
 	// broadcast to other peers
 }
 
+func ReceiveTx(tx core.Transactioner) error {
+	// check if already has the tx
+	// validate tx: two validations, fast validate and full validate
+
+	return nil
+}
+
 func GetPendingTx() []core.Transactioner {
 	return _pendingTransactions
 }
@@ -108,12 +115,13 @@ func GenerateBlock() *core.Block {
 
 func genesis() {
 	// update global status
-	gpo := statusdb.GetGpo()
+	var gpo entity.Gpo
 	gpo.BlockId = core.BlockZeroId
 	gpo.BlockNum = 0
 	gpo.Witness = core.InitWitness
 	gpo.Time = core.GenesisTime
 	gpo.Supply = core.InitAmount
+	statusdb.SaveGpo(gpo)
 
 	// update chain database
 	var acc entity.Account

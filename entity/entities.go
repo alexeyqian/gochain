@@ -1,5 +1,8 @@
 package entity
 
+type Entity interface {
+}
+
 type Gpo struct {
 	BlockId  string
 	BlockNum uint64

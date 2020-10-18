@@ -3,7 +3,11 @@ package core
 type Transactioner interface {
 	Apply() error
 	Validate() error
+	//FastValidate() error // used to validate received tx from network, and called by Validate
 }
+
+// GetRawTransaction
+// DecodeRawTransaction
 
 const InitWitness = "init"
 const InitAmount = 100
@@ -17,12 +21,13 @@ const VoteParentTypeComment = "VoteParentTypeComment"
 const VoteParentTypeAccount = "VoteParentTypeAccount"
 
 type CreateAccountTransaction struct {
-	Id          string
-	AccountId   string
-	AccountName string
-	CreatedBy   string
-	Signature   string // should be [SIGBITS]byte
-	CreatedOn   uint64
+	Id               string
+	AccountId        string
+	AccountName      string
+	CreatedBy        string // TODO: remove, dup with signing public key
+	CreatedOn        uint64
+	Signature        string // should be [SIGBITS]byte
+	SigningPublicKey string
 }
 
 type TransferCoinTransaction struct {
