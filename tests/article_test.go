@@ -35,7 +35,7 @@ func TestCreateArticle(t *testing.T) {
 		t.Errorf("create article error")
 	}
 
-	article := statusdb.GetArticle(tx.ArticleId)
+	article, _ := statusdb.GetArticle(tx.ArticleId)
 	//fmt.Printf("article: %v", article)
 	if article == nil || article.Title != "test_title" {
 		t.Errorf("create and get article error")
@@ -46,6 +46,8 @@ func TestCreateArticle(t *testing.T) {
 }
 
 func TestCreateComment(t *testing.T) {
+	var err error
+
 	chain.Open(TestDataDir)
 
 	chain.AddPendingTx(CreateTestAccount("alice"))
@@ -64,17 +66,20 @@ func TestCreateComment(t *testing.T) {
 	chain.GenerateBlock()
 
 	comments := statusdb.GetComments()
-	if comments == nil || len(comments) != 1 {
+	if len(comments) != 1 {
 		t.Errorf("create comment error")
 	}
 
-	comment := statusdb.GetComment(tx.CommentId)
-	if comment == nil || comment.Body != "comment_test_body" {
-		t.Errorf("create and get comment error")
-	}
-
-	if comment.ParentId != "test_article_001" {
-		t.Errorf("create comment parent error")
+	comment, err := statusdb.GetComment(tx.CommentId)
+	if err != nil {
+		t.Errorf("comment is nil")
+	} else {
+		if comment.Body != "comment_test_body" {
+			t.Errorf("create and get comment error")
+		}
+		if comment.ParentId != "test_article_001" {
+			t.Errorf("create comment parent error")
+		}
 	}
 
 	chain.Close()

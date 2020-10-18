@@ -105,8 +105,9 @@ func GetAccountByName(name string) (*entity.Account, error) {
 	return res, nil
 }
 
-func AddArticle(e *entity.Article) {
+func AddArticle(e *entity.Article) error {
 	_dp.Put(addPrefix(ArticleTable, e.Id), *e)
+	return nil
 }
 
 func GetArticles() []*entity.Article {
@@ -118,14 +119,20 @@ func GetArticles() []*entity.Article {
 	return res
 }
 
-func GetArticle(id string) *entity.Article {
+func GetArticle(id string) (*entity.Article, error) {
 	e, _ := _dp.Get(addPrefix(ArticleTable, id))
 	ce := e.(entity.Article)
-	return &ce
+	return &ce, nil
 }
 
-func AddComment(e *entity.Comment) {
+func UpdateArticle(e *entity.Article) error {
+	_dp.Put(addPrefix(ArticleTable, e.Id), *e)
+	return nil // TODO: check update errors
+}
+
+func AddComment(e *entity.Comment) error {
 	_dp.Put(addPrefix(CommentTable, e.Id), *e)
+	return nil
 }
 
 func GetComments() []*entity.Comment {
@@ -137,14 +144,20 @@ func GetComments() []*entity.Comment {
 	return res
 }
 
-func GetComment(id string) *entity.Comment {
+func GetComment(id string) (*entity.Comment, error) {
 	e, _ := _dp.Get(addPrefix(CommentTable, id))
 	ce := e.(entity.Comment)
-	return &ce
+	return &ce, nil
 }
 
-func AddVote(e *entity.Vote) {
+func UpdateComment(e *entity.Comment) error {
+	_dp.Put(addPrefix(CommentTable, e.Id), *e)
+	return nil // TODO: check update errors
+}
+
+func AddVote(e *entity.Vote) error {
 	_dp.Put(addPrefix(VoteTable, e.Id), *e)
+	return nil
 }
 
 func GetVotes() []*entity.Vote {
@@ -156,10 +169,15 @@ func GetVotes() []*entity.Vote {
 	return res
 }
 
-func GetVote(id string) *entity.Vote {
+func GetVote(id string) (*entity.Vote, error) {
 	e, _ := _dp.Get(addPrefix(VoteTable, id))
 	ce := e.(entity.Vote)
-	return &ce
+	return &ce, nil
+}
+
+func UpdateVote(e *entity.Vote) error {
+	_dp.Put(addPrefix(VoteTable, e.Id), *e)
+	return nil // TODO: check update errors
 }
 
 func addPrefix(table string, key string) string {

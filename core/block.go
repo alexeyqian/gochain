@@ -49,39 +49,3 @@ func UnSerializeBlock(data []byte) (*Block, error) {
 func (b *Block) AddTransaction(t Transactioner) {
 	b.Transactions = append(b.Transactions, t)
 }
-
-/*
-
-type GlobalProperties struct {
-	bno            int
-	genesis_time   string
-	last_witness   string
-	current_supply int
-	max_block_size int
-}
-
-type TransactionType int
-
-const (
-	TtCreateAccount TransactionType = iota
-	TtTransferCoin
-	TtCreateArticle
-	TtRegisterWitness
-)
-
-type Transaction struct {
-	id        string
-	txtype    string
-	data      string
-	creator   string
-	createdon int
-	signature string
-}
-
-
-type Chain struct {
-	id      string
-	version string
-}
-
-*/

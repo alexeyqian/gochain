@@ -29,12 +29,12 @@ func TestVoteAccount(t *testing.T) {
 	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
-	vote := statusdb.GetVote(tx.Id)
+	vote, _ := statusdb.GetVote(tx.Id)
 	if vote == nil {
 		t.Errorf("create vote error")
 	}
 	// TODO: should not need to re-get account from statusdb
-	alice = statusdb.GetAccount(tx.ParentId)
+	alice, _ = statusdb.GetAccount(tx.ParentId)
 	if alice.UpVotes != 1 {
 		t.Errorf("up vote error, expected: %d actual: %d", 1, alice.UpVotes)
 	}

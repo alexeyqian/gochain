@@ -50,8 +50,8 @@ type CreateArticleTransaction struct {
 
 type CreateCommentTransaction struct {
 	Id        string
-	ParentId  string
 	CommentId string
+	ParentId  string
 	Commentor string
 	Body      string
 	CreatedOn uint64

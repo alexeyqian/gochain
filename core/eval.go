@@ -70,6 +70,10 @@ func (tx TransferCoinTransaction) Apply() error {
 	fromAcc.Coin -= tx.Amount
 	toAcc.Coin += tx.Amount
 
+	// TODO: check errors
+	statusdb.UpdateAccount(fromAcc)
+	statusdb.UpdateAccount(toAcc)
+
 	return nil
 }
 
@@ -89,7 +93,8 @@ func (tx CreateArticleTransaction) Apply() error {
 
 	acc, _ := statusdb.GetAccountByName(tx.Author)
 	acc.ArticleCount += 1
-
+	// TODO: check error
+	statusdb.UpdateAccount(acc)
 	return nil
 }
 
@@ -100,8 +105,8 @@ func (tx CreateCommentTransaction) Apply() error {
 	}
 
 	var comment entity.Comment
+	comment.Id = tx.CommentId
 	comment.ParentId = tx.ParentId
-	comment.CommentId = tx.CommentId
 	comment.Commentor = tx.Commentor
 	comment.Body = tx.Body
 	comment.CreatedOn = tx.CreatedOn
@@ -135,8 +140,10 @@ func (tx VoteTransaction) Apply() error {
 			account.VotePower -= vote.VotePower
 		}
 
+		statusdb.UpdateAccount(account)
+
 	} else if vote.ParentType == VoteParentTypeArticle {
-		article := statusdb.GetArticle(vote.ParentId)
+		article, _ := statusdb.GetArticle(vote.ParentId)
 		if article == nil {
 			return errors.New("vote articel not exist")
 		}
@@ -147,9 +154,10 @@ func (tx VoteTransaction) Apply() error {
 			article.DownVotes += 1
 			article.VotePower -= vote.VotePower
 		}
+		statusdb.UpdateArticle(article)
 
 	} else if vote.ParentType == VoteParentTypeComment {
-		comment := statusdb.GetComment(vote.ParentId)
+		comment, _ := statusdb.GetComment(vote.ParentId)
 
 		if vote.Direction > 0 {
 			comment.UpVotes += 1
@@ -158,6 +166,8 @@ func (tx VoteTransaction) Apply() error {
 			comment.DownVotes += 1
 			comment.VotePower -= vote.VotePower
 		}
+
+		statusdb.UpdateComment(comment)
 	}
 
 	return nil

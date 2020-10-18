@@ -12,7 +12,7 @@ import (
 func TestGenesis(t *testing.T) {
 	chain.Open(TestDataDir)
 
-	gpo := statusdb.GetGpo()
+	gpo, _ := statusdb.GetGpo()
 	if gpo.BlockId == "" || gpo.BlockNum != 0 || gpo.Witness != core.InitWitness || gpo.Time <= 0 {
 		t.Errorf("Gpo failed.")
 	}
@@ -55,7 +55,7 @@ func TestGenerateBlock(t *testing.T) {
 	tempb := chain.GenerateBlock()
 	b, _ := chain.GetBlock(int(tempb.Num))
 
-	gpo := statusdb.GetGpo()
+	gpo, _ := statusdb.GetGpo()
 	if gpo.BlockNum != 1 || gpo.BlockId != b.Id {
 		t.Errorf("generate block error")
 	}
@@ -99,7 +99,7 @@ func TestGenerateBlocks(t *testing.T) {
 			t.Errorf("expected: %d, actual: %d", i, b.Num)
 		}
 
-		gpo := statusdb.GetGpo()
+		gpo, _ := statusdb.GetGpo()
 		if gpo.BlockNum != b.Num {
 			t.Errorf("gpo num expected: %d, actual: %d", 20, gpo.BlockNum)
 		}
