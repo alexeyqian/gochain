@@ -75,7 +75,7 @@ func TestGenerateBlock(t *testing.T) {
 	i = 0
 	for i < core.MaxTransactionsInBlock {
 		accName := fmt.Sprintf("test_account_name_%d", i)
-		acc := statusdb.GetAccountByName(accName)
+		acc, _ := statusdb.GetAccountByName(accName)
 		if acc == nil || acc.Name != accName {
 			t.Errorf("cannot find account name: %s", accName)
 		}

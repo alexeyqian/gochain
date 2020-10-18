@@ -32,7 +32,8 @@ func (b *Block) CalculateHash() {
 	var data []byte
 	// fill data with block field bytes
 	hash := sha256.Sum256(data)
-	b.Id = string(hash)
+	var temp []byte = hash[:]
+	b.Id = string(temp)
 }
 
 func SerializeBlock(b *Block) ([]byte, error) {

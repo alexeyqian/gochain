@@ -38,6 +38,7 @@ func Open() {
 		panic("Unknown data provider")
 	}
 
+	_dp.Open()
 }
 
 func Close() {
@@ -48,87 +49,119 @@ func Remove() {
 	_dp.Remove()
 }
 
-func GetGpo() *entity.Gpo {
-	return _dp.Get(GpoKey).(entity.Gpo)
+func GetGpo() (*entity.Gpo, error) {
+	e, _ := _dp.Get(GpoKey)
+	ce := e.(entity.Gpo)
+	return &ce, nil
 }
 
-func SaveGpo(e *entity.Gpo) {
-	_dp.Put(GpoKey, gpo)
+func AddGpo(e *entity.Gpo) error {
+	_dp.Put(GpoKey, *e)
+	return nil
 }
 
-func AddAccount(e entity.Account) {
-	_dp.Put(addPrefix(AccountTable, e.Id), e)
+func UpdateGpo(e *entity.Gpo) error {
+	_dp.Put(GpoKey, *e)
+	return nil
 }
 
-func GetAccounts() []entity.Account {
-	var res []entity.Account
-	for key, value := range _dp.GetAll(AccountTable) {
-		res = append(res, value.(entity.Account))
+func AddAccount(e *entity.Account) error {
+	_dp.Put(addPrefix(AccountTable, e.Id), *e)
+	return nil // TODO: check if account is already exist
+}
+
+func UpdateAccount(e *entity.Account) error {
+	_dp.Put(addPrefix(AccountTable, e.Id), *e)
+	return nil // TODO: check update errors
+}
+
+func GetAccounts() []*entity.Account {
+	var res []*entity.Account
+	for _, value := range _dp.GetAll(AccountTable) {
+		temp := value.(entity.Account)
+		res = append(res, &temp)
 	}
 	return res
 }
 
-func GetAccount(id string) *entity.Account {
-	return _dp.Get(addPrefix(AccountTable, id)).(entity.Account)
+func GetAccount(id string) (*entity.Account, error) {
+	e, err := _dp.Get(addPrefix(AccountTable, id))
+	if err != nil {
+		return nil, err
+	}
+	ce := e.(entity.Account)
+	return &ce, nil
 }
 
 func GetAccountByName(name string) (*entity.Account, error) {
-	for index, acc := range GetAccounts() {
+	var res *entity.Account
+	for _, acc := range GetAccounts() {
 		if acc.Name == name {
-			return &_accounts[index], nil
+			res = acc
+			break
 		}
 	}
-	return nil, nil
+
+	return res, nil
 }
 
-func AddArticle(e entity.Article) {
-	_dp.Put(addPrefix(ArticleTable, e.Id), e)
+func AddArticle(e *entity.Article) {
+	_dp.Put(addPrefix(ArticleTable, e.Id), *e)
 }
 
-func GetArticles() []entity.Article {
-	var res []entity.Article
-	for key, value := range _dp.GetAll(ArticleTable) {
-		res = append(res, value.(entity.Article))
+func GetArticles() []*entity.Article {
+	var res []*entity.Article
+	for _, value := range _dp.GetAll(ArticleTable) {
+		temp := value.(entity.Article)
+		res = append(res, &temp)
 	}
 	return res
 }
 
 func GetArticle(id string) *entity.Article {
-	return _dp.Get(addPrefix(ArticleTable, id)).(entity.Article)
+	e, _ := _dp.Get(addPrefix(ArticleTable, id))
+	ce := e.(entity.Article)
+	return &ce
 }
 
-func AddComment(comment entity.Comment) {
-	_dp.Put(addPrefix(CommentTable, e.Id), e)
+func AddComment(e *entity.Comment) {
+	_dp.Put(addPrefix(CommentTable, e.Id), *e)
 }
 
-func GetComments() []entity.Comment {
-	var res []entity.Comment
-	for key, value := range _dp.GetAll(CommentTable) {
-		res = append(res, value.(entity.Comment))
+func GetComments() []*entity.Comment {
+	var res []*entity.Comment
+	for _, value := range _dp.GetAll(CommentTable) {
+		temp := value.(entity.Comment)
+		res = append(res, &temp)
 	}
 	return res
 }
 
 func GetComment(id string) *entity.Comment {
-	return _dp.Get(addPrefix(CommentTable, id)).(entity.Comment)
+	e, _ := _dp.Get(addPrefix(CommentTable, id))
+	ce := e.(entity.Comment)
+	return &ce
 }
 
-func AddVote(r entity.Vote) {
-	_dp.Put(addPrefix(VoteTable, e.Id), e)
+func AddVote(e *entity.Vote) {
+	_dp.Put(addPrefix(VoteTable, e.Id), *e)
 }
 
-func GetVotes() []entity.Vote {
-	var res []entity.Vote
-	for key, value := range _dp.GetAll(VoteTable) {
-		res = append(res, value.(entity.Vote))
+func GetVotes() []*entity.Vote {
+	var res []*entity.Vote
+	for _, value := range _dp.GetAll(VoteTable) {
+		temp := value.(entity.Vote)
+		res = append(res, &temp)
 	}
 	return res
 }
 
 func GetVote(id string) *entity.Vote {
-	return _dp.Get(addPrefix(VoteTable, id)).(entity.Vote)
+	e, _ := _dp.Get(addPrefix(VoteTable, id))
+	ce := e.(entity.Vote)
+	return &ce
 }
 
-func addPrefix(table string, key string) {
+func addPrefix(table string, key string) string {
 	return table + "_" + key
 }

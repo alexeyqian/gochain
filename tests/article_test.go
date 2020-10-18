@@ -25,7 +25,7 @@ func TestCreateArticle(t *testing.T) {
 	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
-	acc := statusdb.GetAccountByName("alice")
+	acc, _ := statusdb.GetAccountByName("alice")
 	if acc.ArticleCount != 1 {
 		t.Errorf("create article >>> article count expected: %d, actual: %d", 1, acc.ArticleCount)
 	}

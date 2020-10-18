@@ -19,7 +19,7 @@ func TestVoteAccount(t *testing.T) {
 
 	var tx core.VoteTransaction
 	tx.Id = utils.CreateUuid()
-	alice := statusdb.GetAccountByName("alice")
+	alice, _ := statusdb.GetAccountByName("alice")
 	tx.ParentId = alice.Id
 	tx.ParentType = core.VoteParentTypeAccount
 	tx.Direction = 1

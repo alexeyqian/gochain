@@ -31,7 +31,7 @@ type Account struct {
 }
 
 type Article struct {
-	ArticleId string
+	Id        string
 	Author    string
 	Title     string
 	Body      string
@@ -42,6 +42,7 @@ type Article struct {
 }
 
 type Comment struct {
+	Id        string
 	ParentId  string
 	CommentId string
 	Commentor string

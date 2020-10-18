@@ -14,7 +14,7 @@ func TestCreateAccount(t *testing.T) {
 	chain.AddPendingTx(CreateTestAccount("alice"))
 	chain.GenerateBlock()
 
-	acc := statusdb.GetAccountByName("alice")
+	acc, _ := statusdb.GetAccountByName("alice")
 	if acc.Name != "alice" {
 		t.Errorf("create account faile")
 	}
@@ -36,7 +36,7 @@ func TestTransfer(t *testing.T) {
 	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
-	acc := statusdb.GetAccountByName("alice")
+	acc, _ := statusdb.GetAccountByName("alice")
 	if acc.Coin != 100 {
 		t.Errorf("expected: %d, actual: %d", 100, acc.Coin)
 	}
@@ -80,12 +80,12 @@ func TestTransferNoSufficientFund(t *testing.T) {
 		t.Errorf("transfer not sufficent found, cannot detect error")
 	}
 
-	accInit := statusdb.GetAccountByName(core.InitWitness)
+	accInit, _ := statusdb.GetAccountByName(core.InitWitness)
 	if accInit.Coin != core.InitAmount {
 		t.Errorf("expected: %d, actual: %d", core.InitAmount, accInit.Coin)
 	}
 
-	accAlice := statusdb.GetAccountByName("alice")
+	accAlice, _ := statusdb.GetAccountByName("alice")
 	if accAlice.Coin != 0 {
 		t.Errorf("expected: %d, actual: %d", 0, accAlice.Coin)
 	}

@@ -84,27 +84,32 @@ func AddPendingTx(tx core.Transactioner) error {
 
 func GenerateBlock() *core.Block {
 	var b core.Block
+	var gpo *entity.Gpo
+
+	gpo, _ = statusdb.GetGpo()
+
 	b.Id = utils.CreateUuid()
-	b.PrevBlockId = statusdb.GetGpo().BlockId
-	b.Num = statusdb.GetGpo().BlockNum + uint64(1)
+	b.PrevBlockId = gpo.BlockId
+	b.Num = gpo.BlockNum + uint64(1)
 	sec := time.Now().Unix()
 	b.CreatedOn = uint64(sec)
 	movePendingTransactionsToBlock(&b)
 
+	// TODO: should gpo be updated during tx.Apply ??
 	for _, tx := range b.Transactions {
-		terr := tx.Apply()
+		terr := tx.Apply() // gpo might be updated during tx.Apply()
 		if terr != nil {
 			// move tx to invalid tx
 			//
 		}
 	}
 
-	// update gpo
-	gpo := statusdb.GetGpo()
+	gpo, _ = statusdb.GetGpo()
 	gpo.BlockId = b.Id
 	gpo.BlockNum = b.Num
 	gpo.Time = b.CreatedOn
 	gpo.Supply += core.AmountPerBlock
+	statusdb.UpdateGpo(gpo)
 
 	// append new block to ledger
 	sb, _ := core.SerializeBlock(&b)
@@ -121,7 +126,7 @@ func genesis() {
 	gpo.Witness = core.InitWitness
 	gpo.Time = core.GenesisTime
 	gpo.Supply = core.InitAmount
-	statusdb.SaveGpo(gpo)
+	statusdb.AddGpo(&gpo)
 
 	// update chain database
 	var acc entity.Account
@@ -129,7 +134,7 @@ func genesis() {
 	acc.Name = core.InitWitness
 	acc.CreatedOn = core.GenesisTime
 	acc.Coin = core.InitAmount
-	statusdb.AddAccount(acc)
+	statusdb.AddAccount(&acc)
 
 	// update ledger, create a dummy block 0
 	b := core.Block{Id: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
