@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"os"
 	"time"
 
 	"github.com/alexeyqian/gochain/config"
@@ -12,6 +13,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// BoltDataProvider implemented with Bolt DB
 type BoltDataProvider struct {
 }
 
@@ -53,7 +55,7 @@ func (dp *BoltDataProvider) Close() {
 }
 
 // Remove all data in db
-func (dp *MemDataProvider) Remove() {
+func (dp *BoltDataProvider) Remove() {
 	_db.Update(func(tx *bolt.Tx) error {
 		tx.DeleteBucket([]byte(GpoTable))
 		tx.DeleteBucket([]byte(AccountTable))
@@ -63,18 +65,24 @@ func (dp *MemDataProvider) Remove() {
 
 		return nil
 	})
+
+	os.Remove(config.BoltDbFileName)
 }
 
 // Get an entity
 func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
 	var err error
 	var result entity.Entity
+	var temp []byte
 
 	entityType := getPrefix(key)
 	err = _db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(entityType))
 		data := b.Get([]byte(key))
-		result, err = deserializeEntity(entityType, data)
+		temp = make([]byte, len(data))
+		copy(temp, data)
+		result, err = deserializeEntity(entityType, temp)
+		//fmt.Printf("result: %v", result)
 		return err
 	})
 	return result, err
@@ -82,8 +90,9 @@ func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
 
 // Put an entity
 func (dp *BoltDataProvider) Put(key string, e entity.Entity) error {
+	var err error
 	entityType := getPrefix(key)
-	err := _db.Update(func(tx *bolt.Tx) error {
+	err = _db.Update(func(tx *bolt.Tx) error {
 		data, _ := serializeEntity(entityType, e)
 		b := tx.Bucket([]byte(entityType))
 		err = b.Put([]byte(key), data)
@@ -92,6 +101,29 @@ func (dp *BoltDataProvider) Put(key string, e entity.Entity) error {
 	})
 
 	return err
+}
+
+// GetAll data from table
+func (dp *BoltDataProvider) GetAll(table string) []entity.Entity {
+	var err error
+	var temp []byte
+	var res []entity.Entity
+
+	err = _db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(table))
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			temp = make([]byte, len(v))
+			copy(temp, v)
+			e, _ := deserializeEntity(table, temp)
+			res = append(res, e)
+		}
+
+		return err
+	})
+
+	return res
 }
 
 func serializeEntity(entityType string, e entity.Entity) ([]byte, error) {
@@ -133,23 +165,23 @@ func deserializeEntity(entityType string, data []byte) (entity.Entity, error) {
 	case GpoTable:
 		var e entity.Gpo
 		err = decoder.Decode(&e)
-		return &e, err
+		return e, err
 	case AccountTable:
 		var e entity.Account
 		err = decoder.Decode(&e)
-		return &e, err
+		return e, err
 	case ArticleTable:
 		var e entity.Article
 		err = decoder.Decode(&e)
-		return &e, err
+		return e, err
 	case CommentTable:
 		var e entity.Comment
 		err = decoder.Decode(&e)
-		return &e, err
+		return e, err
 	case VoteTable:
 		var e entity.Vote
 		err = decoder.Decode(&e)
-		return &e, err
+		return e, err
 	}
 
 	panic("deserialize: unknown entity type")

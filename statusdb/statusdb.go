@@ -32,8 +32,8 @@ var _dp DataProvider
 func Open() {
 	if config.DataProvider == "MemDataProvider" {
 		_dp = &MemDataProvider{}
-		//} else if config.DataProvider == "BoldDataProvider" {
-		//	_dp = BoldDataProvider{}
+	} else if config.DataProvider == "BoltDataProvider" {
+		_dp = &BoltDataProvider{}
 	} else {
 		panic("Unknown data provider")
 	}
@@ -51,7 +51,7 @@ func Remove() {
 
 func GetGpo() (*entity.Gpo, error) {
 	e, _ := _dp.Get(GpoKey)
-	ce := e.(entity.Gpo)
+	ce, _ := e.(entity.Gpo)
 	return &ce, nil
 }
 
@@ -78,7 +78,7 @@ func UpdateAccount(e *entity.Account) error {
 func GetAccounts() []*entity.Account {
 	var res []*entity.Account
 	for _, value := range _dp.GetAll(AccountTable) {
-		temp := value.(entity.Account)
+		temp, _ := value.(entity.Account)
 		res = append(res, &temp)
 	}
 	return res
@@ -89,7 +89,7 @@ func GetAccount(id string) (*entity.Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	ce := e.(entity.Account)
+	ce, _ := e.(entity.Account)
 	return &ce, nil
 }
 
@@ -113,7 +113,7 @@ func AddArticle(e *entity.Article) error {
 func GetArticles() []*entity.Article {
 	var res []*entity.Article
 	for _, value := range _dp.GetAll(ArticleTable) {
-		temp := value.(entity.Article)
+		temp, _ := value.(entity.Article)
 		res = append(res, &temp)
 	}
 	return res
@@ -121,7 +121,7 @@ func GetArticles() []*entity.Article {
 
 func GetArticle(id string) (*entity.Article, error) {
 	e, _ := _dp.Get(addPrefix(ArticleTable, id))
-	ce := e.(entity.Article)
+	ce, _ := e.(entity.Article)
 	return &ce, nil
 }
 
@@ -138,7 +138,7 @@ func AddComment(e *entity.Comment) error {
 func GetComments() []*entity.Comment {
 	var res []*entity.Comment
 	for _, value := range _dp.GetAll(CommentTable) {
-		temp := value.(entity.Comment)
+		temp, _ := value.(entity.Comment)
 		res = append(res, &temp)
 	}
 	return res
@@ -146,7 +146,7 @@ func GetComments() []*entity.Comment {
 
 func GetComment(id string) (*entity.Comment, error) {
 	e, _ := _dp.Get(addPrefix(CommentTable, id))
-	ce := e.(entity.Comment)
+	ce, _ := e.(entity.Comment)
 	return &ce, nil
 }
 
@@ -163,7 +163,7 @@ func AddVote(e *entity.Vote) error {
 func GetVotes() []*entity.Vote {
 	var res []*entity.Vote
 	for _, value := range _dp.GetAll(VoteTable) {
-		temp := value.(entity.Vote)
+		temp, _ := value.(entity.Vote)
 		res = append(res, &temp)
 	}
 	return res
@@ -171,7 +171,7 @@ func GetVotes() []*entity.Vote {
 
 func GetVote(id string) (*entity.Vote, error) {
 	e, _ := _dp.Get(addPrefix(VoteTable, id))
-	ce := e.(entity.Vote)
+	ce, _ := e.(entity.Vote)
 	return &ce, nil
 }
 

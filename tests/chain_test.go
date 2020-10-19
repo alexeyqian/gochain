@@ -22,6 +22,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	accounts := statusdb.GetAccounts()
+	fmt.Printf("account len: %d", len(accounts))
 	if len(accounts) != 1 || accounts[0].Name != core.InitWitness {
 		t.Errorf("create account fail.")
 	}
