@@ -65,6 +65,35 @@ func (dp *MemDataProvider) Remove() {
 	})
 }
 
+// Get an entity
+func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
+	var err error
+	var result entity.Entity
+
+	entityType := getPrefix(key)
+	err = _db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(entityType))
+		data := b.Get([]byte(key))
+		result, err = deserializeEntity(entityType, data)
+		return err
+	})
+	return result, err
+}
+
+// Put an entity
+func (dp *BoltDataProvider) Put(key string, e entity.Entity) error {
+	entityType := getPrefix(key)
+	err := _db.Update(func(tx *bolt.Tx) error {
+		data, _ := serializeEntity(entityType, e)
+		b := tx.Bucket([]byte(entityType))
+		err = b.Put([]byte(key), data)
+
+		return err
+	})
+
+	return err
+}
+
 func serializeEntity(entityType string, e entity.Entity) ([]byte, error) {
 	var err error
 	var result bytes.Buffer
@@ -124,4 +153,9 @@ func deserializeEntity(entityType string, data []byte) (entity.Entity, error) {
 	}
 
 	panic("deserialize: unknown entity type")
+}
+
+func getPrefix(key string) string {
+	index := bytes.Index([]byte(key), []byte("_"))
+	return key[0:index]
 }
