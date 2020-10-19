@@ -80,9 +80,8 @@ func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
 		b := tx.Bucket([]byte(entityType))
 		data := b.Get([]byte(key))
 		temp = make([]byte, len(data))
-		copy(temp, data)
+		copy(temp, data) // @attention Have to duplicate the data out, it will invalid out tx
 		result, err = deserializeEntity(entityType, temp)
-		//fmt.Printf("result: %v", result)
 		return err
 	})
 	return result, err
@@ -115,7 +114,7 @@ func (dp *BoltDataProvider) GetAll(table string) []entity.Entity {
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			temp = make([]byte, len(v))
-			copy(temp, v)
+			copy(temp, v) // @attention Have to duplicate v out, which will be invalid out side of tx
 			e, _ := deserializeEntity(table, temp)
 			res = append(res, e)
 		}
