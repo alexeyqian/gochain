@@ -85,19 +85,6 @@ func HashPubKey(pubkey []byte) []byte {
 	return ripemd
 }
 
-// Sign sign a transaction
-func Sign(privkey ecdsa.PrivateKey) {
-	// sign a trimmed version of tx, not all fields
-	// only sign important fields
-	// tx.id and tx.signature is empty at this point
-	// tx.pubkey is not empty at this point
-	// tx.id is a hash of tx body except id and signature
-	// tx.id = tx.Hash()
-	// r, s, err := ecdsa.Sign(rand.Reader, &privkey, tx.id)
-	// tx.signature := (r.Bytes(), s.Bytes()...)
-
-}
-
 func VerifySignature(tx core.Transactioner) bool {
 	// unpack values of signature which is a pair of numbers
 	signature := tx.GetSignature()
