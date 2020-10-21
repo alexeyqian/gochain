@@ -96,10 +96,10 @@ type VoteTransaction struct {
 	Voter      string
 }
 
-func SerializeTx(tx *Transactioner) []byte {
+func SerializeTx(tx Transactioner) []byte {
 	var encoded bytes.Buffer
 	enc := gob.NewEncoder(&encoded)
-	err := enc.Encode(*tx)
+	err := enc.Encode(tx)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -107,30 +107,33 @@ func SerializeTx(tx *Transactioner) []byte {
 	return encoded.Bytes()
 }
 
-func HashTx(tx *Transactioner) []byte {
-	//fv := reflect.ValueOf(tx).Elem().FieldByName("Id")
-	//id := fv.String()
-	//fv = reflect.ValueOf(tx).Elem().FieldByName("Signature")
-	//signature := fv.String()
-	//if id != nil || signature != nil {
-	//	log.Panic("should not call hash after setting id and signature")
-	//}
-	// assert public key is not mepty
+func HashTx(tx Transactioner) []byte {
+
+	id := GetTxId(tx)
+	signature := GetTxSignature(tx)
+	if id != "" || signature != "" {
+		log.Panic("should not call hash after setting id and signature")
+	}
+	pubkey := GetTxPubKey(tx)
+	if pubkey == "" {
+		log.Panic("should not call hash if pubkey is empty")
+	}
 
 	hash := sha256.Sum256(SerializeTx(tx))
 	return hash[:]
 }
 
 // Sign sign a transaction id/hash
-func SignTx(privkey ecdsa.PrivateKey, tx *Transactioner) {
+func SignTx(privkey ecdsa.PrivateKey, tx Transactioner) {
 	id := HashTx(tx)
+	//fmt.Printf("tx hash len %d and value: %v\n", len(id), id)
 	SetTxId(tx, string(id))
 	r, s, _ := ecdsa.Sign(rand.Reader, &privkey, id)
 	temp := append(r.Bytes(), s.Bytes()...)
 	SetTxSignature(tx, string(temp))
 }
 
-func VerifyTxSignature(tx *Transactioner) bool {
+func VerifyTxSignature(tx Transactioner) bool {
 	// unpack values of signature which is a pair of numbers
 	signature := []byte(GetTxSignature(tx))
 	siglen := len(signature)
@@ -153,27 +156,22 @@ func VerifyTxSignature(tx *Transactioner) bool {
 	return ecdsa.Verify(&rawPubkey, []byte(GetTxId(tx)), &r, &s)
 }
 
-func GetTxId(tx *Transactioner) string {
-	ctx := *tx
-	return reflect.ValueOf(ctx).Elem().FieldByName("Id").String()
+func GetTxId(tx Transactioner) string {
+	return reflect.ValueOf(tx).Elem().FieldByName("Id").String()
 }
 
-func SetTxId(tx *Transactioner, id string) {
-	ctx := *tx
-	reflect.ValueOf(&ctx).Elem().FieldByName("Id").SetString(id)
+func SetTxId(tx Transactioner, id string) {
+	reflect.ValueOf(tx).Elem().FieldByName("Id").SetString(id)
 }
 
-func GetTxSignature(tx *Transactioner) string {
-	ctx := *tx
-	return reflect.ValueOf(ctx).Elem().FieldByName("Signature").String()
+func GetTxSignature(tx Transactioner) string {
+	return reflect.ValueOf(tx).Elem().FieldByName("Signature").String()
 }
 
-func SetTxSignature(tx *Transactioner, sig string) {
-	ctx := *tx
-	reflect.ValueOf(&ctx).Elem().FieldByName("Signature").SetString(sig)
+func SetTxSignature(tx Transactioner, sig string) {
+	reflect.ValueOf(tx).Elem().FieldByName("Signature").SetString(sig)
 }
 
-func GetTxPubKey(tx *Transactioner) string {
-	ctx := *tx
-	return reflect.ValueOf(ctx).Elem().FieldByName("PublicKey").String()
+func GetTxPubKey(tx Transactioner) string {
+	return reflect.ValueOf(tx).Elem().FieldByName("PublicKey").String()
 }
