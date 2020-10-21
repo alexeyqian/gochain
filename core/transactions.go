@@ -3,23 +3,19 @@ package core
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
 	"log"
+	"math/big"
 	"reflect"
 )
 
 type Transactioner interface {
 	Apply() error
 	Validate() error
-	//FastValidate() error // used to validate received tx from network, and called by Validate
-	Hash()
-	// TrimmedCopy: get trimmed copy for signing
-	// GetId()
-	// GetPubKey()
-	// GetSignature()
-	// // Sign()
+	// QuickValidate() error
 }
 
 // GetRawTransaction
@@ -126,7 +122,7 @@ func HashTx(tx *Transactioner) []byte {
 }
 
 // Sign sign a transaction id/hash
-func Sign(privkey ecdsa.PrivateKey, tx *Transactioner) {
+func SignTx(privkey ecdsa.PrivateKey, tx *Transactioner) {
 	id := HashTx(tx)
 	SetTxId(tx, string(id))
 	r, s, _ := ecdsa.Sign(rand.Reader, &privkey, id)
@@ -134,14 +130,50 @@ func Sign(privkey ecdsa.PrivateKey, tx *Transactioner) {
 	SetTxSignature(tx, string(temp))
 }
 
-func GetTxId(tx *Transactioner) {
-	reflect.ValueOf(tx).Elem().FieldByName("Id")
+func VerifyTxSignature(tx *Transactioner) bool {
+	// unpack values of signature which is a pair of numbers
+	signature := []byte(GetTxSignature(tx))
+	siglen := len(signature)
+	r := big.Int{}
+	s := big.Int{}
+	r.SetBytes(signature[:(siglen / 2)])
+	s.SetBytes(signature[(siglen / 2):])
+
+	// unpack values of public key which is a pair of coordinates
+	pubkey := []byte(GetTxPubKey(tx))
+	keylen := len(pubkey)
+	x := big.Int{}
+	y := big.Int{}
+	x.SetBytes(pubkey[:(keylen / 2)])
+	y.SetBytes(pubkey[(keylen / 2):])
+
+	curve := elliptic.P256()
+	rawPubkey := ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
+
+	return ecdsa.Verify(&rawPubkey, []byte(GetTxId(tx)), &r, &s)
+}
+
+func GetTxId(tx *Transactioner) string {
+	ctx := *tx
+	return reflect.ValueOf(ctx).Elem().FieldByName("Id").String()
 }
 
 func SetTxId(tx *Transactioner, id string) {
-	reflect.ValueOf(&tx).Elem().FieldByName("Id").SetString(id)
+	ctx := *tx
+	reflect.ValueOf(&ctx).Elem().FieldByName("Id").SetString(id)
+}
+
+func GetTxSignature(tx *Transactioner) string {
+	ctx := *tx
+	return reflect.ValueOf(ctx).Elem().FieldByName("Signature").String()
 }
 
 func SetTxSignature(tx *Transactioner, sig string) {
-	reflect.ValueOf(&tx).Elem().FieldByName("Signature").SetString(sig)
+	ctx := *tx
+	reflect.ValueOf(&ctx).Elem().FieldByName("Signature").SetString(sig)
+}
+
+func GetTxPubKey(tx *Transactioner) string {
+	ctx := *tx
+	return reflect.ValueOf(ctx).Elem().FieldByName("PublicKey").String()
 }
