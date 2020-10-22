@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/alexeyqian/gochain/wallet"
@@ -17,7 +16,7 @@ func TestMakeKeyPairs(t *testing.T) {
 	addr := wallet.GenerateAddressFromPubKey(pub)
 	//fmt.Printf("address len(bytes): %d\n", len(addr))
 	//fmt.Printf("address as bytes: %+v\n", addr)
-	fmt.Printf("address as string: %s\n", addr)
+	//fmt.Printf("address as string: %s\n", addr)
 
 	flag = wallet.ValidateAddress(addr)
 	if flag == false {

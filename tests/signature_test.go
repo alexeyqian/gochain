@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -49,7 +48,7 @@ func TestSigning(t *testing.T) {
 	tx.AccountName = "Alice"
 
 	core.SignTx(privkey, &tx)
-	fmt.Printf("signature: %v\n", tx.Signature)
+	//fmt.Printf("signature: %v\n", tx.Signature)
 	flag = core.VerifyTxSignature(&tx)
 	if flag == false {
 		t.Errorf("cannot verify tx signature.")
