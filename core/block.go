@@ -49,3 +49,14 @@ func UnSerializeBlock(data []byte) (*Block, error) {
 func (b *Block) AddTransaction(t Transactioner) {
 	b.Transactions = append(b.Transactions, t)
 }
+
+func (b *Block) HashTransactions() []byte {
+	var transactions [][]byte
+
+	for _, tx := range b.Transactions {
+		transactions = append(transactions, HashTx(tx))
+	}
+
+	mtree := NewMerkleTree(transactions)
+	return mtree.RootNode.Data
+}

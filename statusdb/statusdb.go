@@ -25,8 +25,26 @@ type DataProvider interface {
 	Put(key string, e entity.Entity) error
 }
 
-var _lastSavedPoint int = 0 // used for fast replay from giving point
+/*
+type Repository struct{
+	Open()
+	Close()
+	Remove()
+
+	GetByID(id string) (*Account, error)
+	Find() ([]*Account, error)
+	Create(user *Account) error
+	Update(user *Account) error
+	Delete(id string) error
+
+}*/
+
+//var _lastSavedPoint int = 0 // used for fast replay from giving point
 var _dp DataProvider
+
+// NewDB(){
+
+//}
 
 // Open has parameter MemDataProvider
 func Open() {
