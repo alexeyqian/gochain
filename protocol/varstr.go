@@ -1,8 +1,8 @@
 package protocol
 
 import (
-	"bytes"
-	"encoding/binary"
+	"fmt"
+	"io"
 )
 
 // to serialize a message, we need to knwo legnths of all fields.
@@ -19,16 +19,19 @@ func newVarStr(str string) VarStr {
 	}
 }
 
-func (v VarStr) Serialize() ([]byte, error) {
-	var buf bytes.Buffer
-
-	if err := binary.Write(&buf, binary.BigEndian, v.Length); err != nil {
-		return nil, err
+func (v *VarStr) UnmarshalBinary(r io.Reader) error {
+	lengthBuf := make([]byte, 1)
+	if _, err := r.Read(lengthBuf); err != nil {
+		return fmt.Errorf("varstr unmarshalBinary: %+v", err)
 	}
 
-	if _, err := buf.Write([]byte(v.String)); err != nil {
-		return nil, err
-	}
+	v.Length = uint8(lengthBuf[0])
 
-	return buf.Bytes(), nil
+	stringBuf := make([]byte, v.Length)
+	if _, err := r.Read(stringBuf); err != nil {
+		return fmt.Errorf("VarStr.UnmarshalBinary: %+v", err)
+	}
+	v.String = string(stringBuf)
+
+	return nil
 }

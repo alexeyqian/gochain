@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"strings"
 )
 
 const (
-	checksumLength = 4
-	nodeNetwork    = 1
-	magicLength    = 4
+	checksumLength  = 4
+	nodeNetwork     = 1
+	magicLength     = 4
+	MsgHeaderLength = magicLength + commandLength + checksumLength + 4 // 4 layload length value
 )
 
 var (
@@ -22,20 +24,22 @@ var (
 	}
 )
 
-type MessagePayload interface {
-	Serialize() ([]byte, error)
-}
+type Magic [magicLength]byte
 
-type Message struct {
+type MessageHeader struct {
 	Magic    [magicLength]byte
 	Command  [commandLength]byte
 	Length   uint32 // length of payload
 	Checksum [checksumLength]byte
-	Payload  []byte
 }
 
-func NewMessage(cmd, network string, payload MessagePayload) (*Message, error) {
-	serializedPayload, err := payload.Serialize()
+type Message struct {
+	MessageHeader
+	Payload []byte
+}
+
+func NewMessage(cmd, network string, payload interface{}) (*Message, error) {
+	serializedPayload, err := binary.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +55,54 @@ func NewMessage(cmd, network string, payload MessagePayload) (*Message, error) {
 	}
 
 	msg := Message{
-		Magic:    magic,
-		Command:  command,
-		Length:   uint32(len(serializedPayload)),
-		Checksum: checksum(serializedPayload),
-		Payload:  serializedPayload,
+		MessageHeader: MessageHeader{
+			Magic:    magic,
+			Command:  command,
+			Length:   uint32(len(serializedPayload)),
+			Checksum: checksum(serializedPayload),
+		},
+		Payload: serializedPayload,
 	}
 
 	return &msg, nil
+}
+
+func (mh MessageHeader) CommandString() string {
+	return strings.Trim(string(mh.Command[:]), string(0))
+}
+
+func (mh MessageHeader) Validate() error {
+	if !mh.HasValidMagic() {
+		return fmt.Errorf("invalid magic: %x", mh.Magic)
+	}
+
+	if !mh.HasValidCommand() {
+		return fmt.Errorf("invalid command %s", mh.CommandString())
+	}
+
+	return nil
+}
+
+func (mh MessageHeader) HasValidCommand() bool {
+	_, ok := commands[mh.CommandString()]
+	return ok
+}
+
+func (mh MessageHeader) HasValidMagic() bool {
+	switch mh.Magic {
+	case magicMainnet, magicSimnet:
+		return true
+	}
+
+	return false
+}
+
+func checksum(data []byte) [checksumLength]byte {
+	hash := sha256.Sum256(data)
+	hash = sha256.Sum256(hash[:])
+	var hashArr [checksumLength]byte
+	copy(hashArr[:], hash[0:checksumLength])
+	return hashArr
 }
 
 // There’re different formats of serialization.
@@ -92,12 +136,4 @@ func (m Message) Serialize() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func checksum(data []byte) [checksumLength]byte {
-	hash := sha256.Sum256(data)
-	hash = sha256.Sum256(hash[:])
-	var hashArr [checksumLength]byte
-	copy(hashArr[:], hash[0:checksumLength])
-	return hashArr
 }

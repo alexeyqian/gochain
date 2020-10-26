@@ -20,7 +20,7 @@ func NewPingMsg(network string) (*Message, uint64, error) {
 		Nonce: nonce,
 	}
 
-	msg, err := NewMessage("ping", network, payload)
+	msg, err := NewMessage(cmdPing, network, payload)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -33,7 +33,7 @@ func NewPongMsg(network string, nonce uint64) (*Message, error) {
 		Nonce: nonce,
 	}
 
-	msg, err := NewMessage("pong", network, payload)
+	msg, err := NewMessage(cmdPong, network, payload)
 	if err != nil {
 		return nil, err
 	}

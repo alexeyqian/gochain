@@ -1,6 +1,9 @@
 package node
 
-import "io"
+import (
+	"io"
+	"log"
+)
 
 func (nd Node) handleTx(header *protocol.MessageHeader, conn io.ReadWriter) error {
 	var tx protocol.MsgTx
@@ -9,6 +12,8 @@ func (nd Node) handleTx(header *protocol.MessageHeader, conn io.ReadWriter) erro
 	if err := binary.NewDecoder(lr).Decode(&tx); err != nil {
 		return err
 	}
-	// log.Debugf("transaction : %+v", tx)
+	log.Printf("transaction : %+v\n", tx)
+
+	nd.mempool.NewTxCh <- tx
 	return nil
 }

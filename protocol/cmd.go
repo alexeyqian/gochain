@@ -5,14 +5,25 @@ import (
 )
 
 const (
-	cmdPing       = "ping"
-	cmdPong       = "pong"
-	cmdVersion    = "version"
+	cmdVersion = "version"
+	cmdVerack  = "verack"
+	cmdPing    = "ping"
+	cmdPong    = "pong"
+	cmdInv     = "inv"
+	cmdTx      = "tx"
+	cmdGetData = "getdata"
+
 	commandLength = 12
 )
 
 var commands = map[string][commandLength]byte{
 	cmdVersion: newCommand(cmdVersion),
+	cmdVerack:  newCommand(cmdVerack),
+	cmdPing:    newCommand(cmdPing),
+	cmdPong:    newCommand(cmdPong),
+	cmdInv:     newCommand(cmdInv),
+	cmdTx:      newCommand(cmdTx),
+	cmdGetData: newCommand(cmdGetData),
 }
 
 func newCommand(command string) [commandLength]byte {

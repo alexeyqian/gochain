@@ -22,6 +22,7 @@ type Node struct {
 	Peers  map[string]*Peer
 	PingCh chan peerPing
 	PongCh chan uint64
+	mempool *Mempool
 }
 
 func NewNode(network, userAgent string)(*Node, error){
@@ -78,6 +79,7 @@ func (nd Node) Run(nodeAddr string) error{
 	}
 
 	go nd.monitorPeers()
+	go nd.mempool.Run()
 
 	tmp := make([]byte, protocol.MsgHeaderLength)
 
