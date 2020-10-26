@@ -8,7 +8,21 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
+
+	"github.com/alexeyqian/gochain/binary"
 )
+
+type Node struct {
+	Address    string
+	KnownNodes []string
+	// Dependency Injection for testing
+	//BlockChain *chain.Chain
+	//ApiServer  *network.ApiServer
+	Peers  map[string]*Peer
+	PingCh chan peerPing
+	PongCh chan uint64
+}
 
 func (nd *Node) Start() {
 	fmt.Printf("start node on: %s\n", nd.Address)
@@ -156,5 +170,80 @@ func (nd *Node) sendData(addr string, data []byte) {
 	_, err = io.Copy(conn, bytes.NewReader(data))
 	if err != nil {
 		log.Panic(err)
+	}
+}
+
+// As soon as a peer is added, a peer liveliness monitor should start running. Let’s define how it should work:
+// 1. The monitor triggers once in a while and sends a ‘ping’ message to the peer.
+// 2. It waits for a ‘pong’ message containing the nonce from the ‘ping’ message.
+// 3. If no ‘pong’ message is received in a certain time span, then the peer is considered dead and is removed from the list.
+
+func (nd Node) monitorPeers() {
+	// TODO: should we use peerID as key?
+	// since nonc might be same from different peers
+	peerPings := make(map[uint64]string)
+
+	for {
+		select {
+		case pp := <-nd.PingCh:
+			peerPings[pp.nonce] = pp.peerID
+		
+		// pass pong messages from the handler
+		case nonce := <-nd.PongCh:
+			peerID := peerPings[nonce]
+			if peerID == "" { // make sure peer is still in the list
+				break
+			}
+
+			peer := nd.Peers[peerID]
+			if peer == nil {
+				break
+			}
+
+			peer.PongCh <- nonce
+			// after directing the nonce, it should be removed to avoid memory leak
+			delete(peerPings, nonce)		
+	}
+}
+
+// sends ping messages
+// waits for replies and handles 'no replay' case
+func (nd *Node) monitorPeer(peer *Peer) {
+	for {
+		time.Sleep(pingIntervalSec * time.Second)
+		ping, nonce, err := protocol.NewPingMsg(nd.Network)
+		msg, err := binary.Marshal(ping)
+		if err != nil{
+			fmt.Fatalf("monitor peer, binary marshal: %v", err)
+		}
+
+		if _, err := peer.Connection.Write(msg); err != nil {
+			nd.disconnectPeer(peer.ID())
+		}
+
+		fmt.Debugf("send 'ping' to %s", peer)
+
+		nd.PingCh <- peerPing{
+			nonce: nonce, 
+			peerID: peer.ID()
+		}
+
+		t := time.NewTimer(pingTimeoutSec * time.Second)
+
+		select{
+		case pn := <- peer.PongCh:
+			if pn != nonce{
+				fmt.Errorf("nonce doesn't match for %s, expected %d, got %d", peer, nonce, pn)
+				nd.disconnectPeer(peer.ID)
+				return
+			}
+			ftm.Debugf("got 'pong' from %s", peer)
+		case <- t.C:
+			nd.disconnectPeer(peer.ID())
+			return
+		}
+
+		// TODO: timer and return sequence
+		t.Stop()
 	}
 }

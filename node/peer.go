@@ -1,8 +1,14 @@
 package node
 
 import (
+	"fmt"
 	"io"
 	"net"
+)
+
+const (
+	pingIntervalSec = 120
+	pingTimeoutSec  = 30
 )
 
 // system will handle multiple connections
@@ -18,4 +24,13 @@ type Peer struct {
 
 func (p Peer) ID() string {
 	return p.Address.String()
+}
+
+func (p Peer) String() string {
+	return fmt.Sprintf("%s (%s)", p.UserAgent, p.Address)
+}
+
+type peerPing struct {
+	nonce  uint64
+	peerID string
 }
