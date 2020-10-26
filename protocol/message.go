@@ -23,7 +23,7 @@ var (
 )
 
 type MessagePayload interface {
-	Serialize() ([]byte, err)
+	Serialize() ([]byte, error)
 }
 
 type Message struct {
@@ -34,7 +34,7 @@ type Message struct {
 	Payload  []byte
 }
 
-func NewMessage(cmd, network string, payload MessagePayload) (*Message, err) {
+func NewMessage(cmd, network string, payload MessagePayload) (*Message, error) {
 	serializedPayload, err := payload.Serialize()
 	if err != nil {
 		return nil, err
@@ -61,20 +61,7 @@ func NewMessage(cmd, network string, payload MessagePayload) (*Message, err) {
 	return &msg, nil
 }
 
-// to serialize a message, we need to knwo legnths of all fields.
-// Since strings aren't fixed, ew also need to store length of each string
-type VarStr struct {
-	Length uint8
-	String string
-}
-
-func newVarStr(str string) VarStr {
-	return VarStr{
-		Length: uint8(len(str)),
-		String: str,
-	}
-}
-
+// There’re different formats of serialization.
 // encoding/gob is very Golang way of serialization
 // other language don't support it.
 // so the customized serialization mechanic:
@@ -101,20 +88,6 @@ func (m Message) Serialize() ([]byte, error) {
 	}
 
 	if _, err := buf.Write(m.Payload); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func (v VarStr) Serialize() ([]byte, error) {
-	var buf bytes.Buffer
-
-	if err := binary.Write(&buf, binary.BigEndian, v.Length); err != nil {
-		return nil, err
-	}
-
-	if _, err := buf.Write([]bytes(v.String)); err != nil {
 		return nil, err
 	}
 

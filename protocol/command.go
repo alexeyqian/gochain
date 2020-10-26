@@ -12,20 +12,17 @@ const (
 )
 
 var commands = map[string][commandLength]byte{
-	cmdVersion: newCommand(cmdVersion)
+	cmdVersion: newCommand(cmdVersion),
 }
 
-func newCommand(command string) [commandLength]byte{
-	l := len(command)
-	if l > commandLength{
+func newCommand(command string) [commandLength]byte {
+	if len(command) > commandLength {
 		log.Panicf("command %s is too long", command)
 	}
 
 	var packed [commandLength]byte
-	buf := make([]byte, commandLength - 1)
+	buf := make([]byte, commandLength-1)
 	copy(packed[:], append([]byte(command), buf...)[:])
-	
+
 	return packed
 }
-
-
