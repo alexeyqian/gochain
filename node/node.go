@@ -1,6 +1,7 @@
 package node
 
 import (
+	"github.com/alexeyqian/gochain/protocol"
 	"bytes"
 	"encoding/gob"
 	"fmt"
@@ -377,4 +378,26 @@ func (nd Node) disconnectPeer(peerID string){
 	}
 
 	peer.Connection.Close()
+}
+
+func (nd Node) Mempool() map[string]*protocol.MsgTx{
+	m := make(map[string]*protocol.MsgTx)
+
+	for k, v := range nd.mempool.txs{
+		m[string(k)] = v
+	}
+
+	return m
+}
+
+func (nd Node) handleBlock(header *protocol.MessageHeader, conn io.ReadWriter) error{
+	var block protocol.MsgBlock
+
+	lr := io.LimitReader(conn, int64(header.Length))
+	if err := binary.NewDecoder(lr).Decode(&block); err != nil{
+		return err
+	}
+
+	nd.mempool.NewBlockCh <- block
+	return nil
 }
