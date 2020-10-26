@@ -1,13 +1,12 @@
 package node
 
 import (
+	"fmt"
 	"github.com/alexeyqian/gochain/protocol"
 	"net"
 )
 
-// before adding a peer, we must first get basic information about it.
-// finish a version handshake
-
+// received a version message from peer, handle it here
 func (nd Node) handleVersion(header *protocol.MessageHeader, conn net.Conn) error {
 	var version protocol.MsgVersion
 
@@ -19,26 +18,34 @@ func (nd Node) handleVersion(header *protocol.MessageHeader, conn net.Conn) erro
 	peer := Peer{
 		Address: conn.RemoteAddr()
 		Connection: conn,
-		PonCh: make(chan uint64),
+		PongCh: make(chan uint64),
 		Services: version.Services,
 		UserAgent: version.UserAgent.String,
 		Version: version.Version
 	}
 
 	n.Peers[peer.ID()] = &peer
-	// after peer is added, start the monitor cycle
+	// after peer is added, start the monitor indefinity loop
 	go nd.monitorPeer(&peer)
-	 // ...
-}
+	 
+	// TODO: check if it's new peer or existing peer
+	fmt.Printf("new peer %s\n", peer)
 
-func (nd Node) handlePong(header *protocol.MessageHeader, conn io.ReadWriter) error{
-	var pong protocol.MsgPing // ?? MsgPong
-
-	lr := io.LimitReader(conn, int64(header.Length))
-	if err := binary.NewDecoder(lr).Decode(&pong); err != nil{
+	// after receiving a version message
+	// node send out a version ack message
+	varack, err := protocol.NewVeractMsg(n.Network)
+	if err != nil{
 		return err
 	}
 
-	nd.PongCh <- pong.Nonce
+	msg, err := binary.Marshal(verack)
+	if err != nil{
+		return err
+	}
+
+	if _, err := conn.Write(msg); err != nil{
+		return err
+	}
+
 	return nil
 }

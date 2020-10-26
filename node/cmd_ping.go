@@ -14,8 +14,17 @@ func (nd Node) handlePing(header *protocol.MessageHeader, conn io.ReadWriter) er
 		return err
 	}
 
+	// after receiving a ping
+	// send out a pong response
 	pong, err := protocol.NewPongMsg(n.Network, ping.Nonce)
+	if err != nil {
+		return err
+	}
+
 	msg, err := binary.Marshal(pong)
+	if err != nil {
+		return err
+	}
 
 	if _, err := conn.Write(msg); err != nil {
 		return err

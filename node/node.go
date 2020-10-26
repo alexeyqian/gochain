@@ -24,6 +24,124 @@ type Node struct {
 	PongCh chan uint64
 }
 
+func NewNode(network, userAgent string)(*Node, error){
+	networkMagic, ok := protocol.Networks[network]
+	if !ok{
+		return nil, fmt.Errorf("unsupported network %s", network)
+	}
+
+	return &Node{
+		Network: network,
+		NetworkMagic: networkMagic,
+		Peers: make(map[string]*Peer),
+		PingCh: make(chan peerPing),
+		pongCh: make(chan uint64),
+		UserAgent: userAgent,
+	}, nil
+}
+
+// before adding a peer, we must first get basic information about it.
+// finish a version handshake
+
+// TODO: replace Start
+func (nd Node) Run(nodeAddr string) error{
+	peerAddr, err := ParseNodeAddr(nodeAddr)
+	if err != nil{
+		return error
+	}
+
+	version, err := protocol.NewVersinMsg(
+		nd.Network,
+		nd.UserAgent,
+		peerAddr.IP,
+		peerAddr.Port,
+	)
+
+	if err != nil{
+		return err
+	}
+
+	msgSerialized, err := binary.Marshal(version)
+	if err != nil{
+		return err
+	}
+
+	conn, err := net.Dial("tcp", nodeAddr)
+	if err != nil{
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Write(msgSerialized)
+	if err != nil{
+		return err
+	}
+
+	go nd.monitorPeers()
+
+	tmp := make([]byte, protocol.MsgHeaderLength)
+
+	loop:
+	for{
+		n, err := conn.Read(tmp)
+		if err != nil{
+			if err != io.EOF {
+				return err
+			}
+			break loop
+		}
+
+		var msgHeader protocol.MessageHeader
+		if err := binary.NewDecoder(bytes.NewReader(tmp[:n])).Decode(&msgHeader); err != nil{
+			fmt.Errorf("invalide header: %+v", err)
+			continue
+		}
+
+		if err := msgHeader.Validate(); err != nil{
+			fmt.Errorf(err)
+			continue
+		}
+
+		fmt.Printf("received message: %s\n", msgHeader.Command)
+
+		switch msgHeader.CommandString(){
+		case "version":
+			if err := nd.handleVersion(&msgHeader, conn); err != nil{
+				fmt.Errorf("failed to handle 'version': %+v", err)
+				continue
+			}
+		case "verack":
+			if err := nd.handleVerack(&msgHeader, conn); err != nil{
+				fmt.Errorf("failed to handler 'verack': %+v", err)
+				continue
+			}
+		case "ping":
+			if err := no.handlePing(&msgHeader, conn); err != nil {
+				fmt.Errorf("failed to handle 'ping': %+v", err)
+				continue
+			}
+		case "pong":
+			if err := no.handlePong(&msgHeader, conn); err != nil {
+				fmt.Errorf("failed to handle 'pong': %+v", err)
+				continue
+			}
+		case "inv":
+			if err := no.handleInv(&msgHeader, conn); err != nil {
+				fmt.Errorf("failed to handle 'inv': %+v", err)
+				continue
+			}
+		case "tx":
+			if err := no.handleTx(&msgHeader, conn); err != nil {
+				fmt.Errorf("failed to handle 'tx': %+v", err)
+				continue
+			}		
+		}
+
+	}
+
+	return nil
+}
+
 func (nd *Node) Start() {
 	fmt.Printf("start node on: %s\n", nd.Address)
 
@@ -246,4 +364,15 @@ func (nd *Node) monitorPeer(peer *Peer) {
 		// TODO: timer and return sequence
 		t.Stop()
 	}
+}
+
+func (nd Node) disconnectPeer(peerID string){
+	fmt.Printf("disconnectiong peer %s\n", peerID)
+
+	peer := nd.Peers[peerID]
+	if peer == nil{
+		return
+	}
+
+	peer.Connection.Close()
 }
