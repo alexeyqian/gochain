@@ -10,17 +10,13 @@ type MsgPong struct {
 	Nonce uint64
 }
 
-type MsgPone struct {
-	Nonce uint64
-}
-
 func NewPingMsg(network string) (*Message, uint64, error) {
 	nonce := rand.Uint64()
 	payload := MsgPing{
 		Nonce: nonce,
 	}
 
-	msg, err := NewMessage(cmdPing, network, payload)
+	msg, err := NewMessage(network, cmdPing, payload)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -33,7 +29,7 @@ func NewPongMsg(network string, nonce uint64) (*Message, error) {
 		Nonce: nonce,
 	}
 
-	msg, err := NewMessage(cmdPong, network, payload)
+	msg, err := NewMessage(network, cmdPong, payload)
 	if err != nil {
 		return nil, err
 	}

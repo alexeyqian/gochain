@@ -12,3 +12,5 @@ type MsgTx struct {
 	Version int32
 	Witness string
 }
+
+// func NewMsgTx

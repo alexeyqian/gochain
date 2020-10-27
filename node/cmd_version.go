@@ -19,7 +19,7 @@ func (nd Node) handleVersion(header *protocol.MessageHeader, conn net.Conn) erro
 		Address: conn.RemoteAddr()
 		Connection: conn,
 		PongCh: make(chan uint64),
-		Services: version.Services,
+		NodeType: version.NodeType,
 		UserAgent: version.UserAgent.String,
 		Version: version.Version
 	}

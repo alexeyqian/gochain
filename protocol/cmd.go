@@ -1,34 +1,36 @@
 package protocol
 
-import (
-	"log"
-)
+import "fmt"
 
 const (
-	cmdVersion = "version"
-	cmdVerack  = "verack"
-	cmdPing    = "ping"
-	cmdPong    = "pong"
-	cmdInv     = "inv"
-	cmdTx      = "tx"
-	cmdGetData = "getdata"
+	cmdVersion  = "version"
+	cmdVerack   = "verack"
+	cmdPing     = "ping"
+	cmdPong     = "pong"
+	cmdInvBlock = "invblock"
+	cmdInvTx    = "invtx"
+	cmdBlock    = "block"
+	cmdTx       = "tx"
+	cmdGetData  = "getdata"
 
 	commandLength = 12
 )
 
 var commands = map[string][commandLength]byte{
-	cmdVersion: newCommand(cmdVersion),
-	cmdVerack:  newCommand(cmdVerack),
-	cmdPing:    newCommand(cmdPing),
-	cmdPong:    newCommand(cmdPong),
-	cmdInv:     newCommand(cmdInv),
-	cmdTx:      newCommand(cmdTx),
-	cmdGetData: newCommand(cmdGetData),
+	cmdVersion:  newCommand(cmdVersion),
+	cmdVerack:   newCommand(cmdVerack),
+	cmdPing:     newCommand(cmdPing),
+	cmdPong:     newCommand(cmdPong),
+	cmdInvBlock: newCommand(cmdInvBlock),
+	cmdInvTx:    newCommand(cmdInvTx),
+	cmdBlock:    newCommand(cmdBlock),
+	cmdTx:       newCommand(cmdTx),
+	cmdGetData:  newCommand(cmdGetData),
 }
 
 func newCommand(command string) [commandLength]byte {
 	if len(command) > commandLength {
-		log.Panicf("command %s is too long", command)
+		panic(fmt.Sprintf("command %s is too long", command))
 	}
 
 	var packed [commandLength]byte

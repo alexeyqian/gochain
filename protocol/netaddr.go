@@ -5,15 +5,9 @@ import (
 )
 
 type IPv4 [4]byte
-type VersionNetAddr struct {
-	Time     uint32
-	Services uint64
-	IP       *IPv4
-	Port     uint16
-}
 
-func NewIPv4(a, b, c, d uint8) *IPv4 {
-	return &IPv4{a, b, c, d}
+func NewIPv4(a, b, c, d uint8) IPv4 {
+	return IPv4{a, b, c, d}
 }
 
 func (ip IPv4) String() string {

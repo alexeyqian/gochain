@@ -1,24 +1,20 @@
 package protocol
 
-import (
-	"fmt"
-	"io"
-)
-
 // to serialize a message, we need to knwo legnths of all fields.
 // Since strings aren't fixed, ew also need to store length of each string
 type VarStr struct {
-	Length uint8
+	Length uint8 // limited to size 256
 	String string
 }
 
-func newVarStr(str string) VarStr {
+func NewVarStr(str string) VarStr {
 	return VarStr{
 		Length: uint8(len(str)),
 		String: str,
 	}
 }
 
+/* Only needed if you want to customize the serialization
 func (v *VarStr) UnmarshalBinary(r io.Reader) error {
 	lengthBuf := make([]byte, 1)
 	if _, err := r.Read(lengthBuf); err != nil {
@@ -34,4 +30,4 @@ func (v *VarStr) UnmarshalBinary(r io.Reader) error {
 	v.String = string(stringBuf)
 
 	return nil
-}
+}*/

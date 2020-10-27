@@ -1,11 +1,11 @@
 package protocol
 
 import (
-	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"strings"
+
+	"github.com/alexeyqian/gochain/utils"
 )
 
 const (
@@ -38,10 +38,10 @@ type Message struct {
 	Payload []byte
 }
 
-func NewMessage(cmd, network string, payload interface{}) (*Message, error) {
-	serializedPayload, err := binary.Marshal(payload)
-	if err != nil {
-		return nil, err
+func NewMessage(network, cmd string, payload interface{}) (*Message, error) {
+	magic, ok := networks[network]
+	if !ok {
+		return nil, fmt.Errorf("unsupported network %s", network)
 	}
 
 	command, ok := commands[cmd]
@@ -49,9 +49,9 @@ func NewMessage(cmd, network string, payload interface{}) (*Message, error) {
 		return nil, fmt.Errorf("unsupported comamnd %s", cmd)
 	}
 
-	magic, ok := networks[network]
-	if !ok {
-		return nil, fmt.Errorf("unsupported network %s", network)
+	serializedPayload, err := utils.SerializeStruct(payload)
+	if err != nil {
+		return nil, err
 	}
 
 	msg := Message{
@@ -105,6 +105,7 @@ func checksum(data []byte) [checksumLength]byte {
 	return hashArr
 }
 
+/* only used for customized serialization
 // There’re different formats of serialization.
 // encoding/gob is very Golang way of serialization
 // other language don't support it.
@@ -137,3 +138,4 @@ func (m Message) Serialize() ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
+*/

@@ -4,35 +4,36 @@ import (
 	"encoding/hex"
 	"testing"
 	"time"
+
+	"github.com/alexeyqian/gochain/utils"
 )
 
 func TestMessageSerialization(t *testing.T) {
 	version := MsgVersion{
 		Version:   Version,
-		Services:  SrvNodeNetwork,
+		NodeType:  NodeTypeFull,
 		Timestamp: time.Date(2019, 11, 11, 0, 0, 0, 0, time.UTC).Unix(),
-		AddrRecv: NetAddr{
-			Services: SrvNodeNetwork,
+		AddrRecv: VersionNetAddr{
+			NodeType: NodeTypeFull,
 			IP:       NewIPv4(127, 0, 0, 1),
 			Port:     9333,
 		},
-		AddrFrom: NetAddr{
-			Services: SrvNodeNetwork,
+		AddrFrom: VersionNetAddr{
+			NodeType: NodeTypeFull,
 			IP:       NewIPv4(127, 0, 0, 1),
 			Port:     9334,
 		},
 		Nonce:       31337,
-		UserAgent:   NewUserAgent(),
+		UserAgent:   NewVarStr(UserAgent),
 		StartHeight: -1,
-		Relay:       true,
 	}
-	msg, err := NewMessage("version", "simnet", version)
+	msg, err := NewMessage("simnet", "version", version)
 	if err != nil {
 		t.Errorf("unexpected error: %+v", err)
 		return
 	}
 
-	msgSerialized, err := msg.Serialize()
+	msgSerialized, err := utils.SerializeStruct(&msg)
 	if err != nil {
 		t.Errorf("unexpected error: %+v", err)
 		return

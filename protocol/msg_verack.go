@@ -1,7 +1,7 @@
 package protocol
 
 func NewVerackMsg(network string) (*Message, error) {
-	msg, err := NewMessage(cmdVerack, network, []byte{})
+	msg, err := NewMessage(network, cmdVerack, []byte{})
 	if err != nil {
 		return nil, err
 	}

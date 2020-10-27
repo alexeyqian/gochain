@@ -16,7 +16,7 @@ func (nd Node) handleInv(header *protocol.MessageHeader, conn io.ReadWriter) err
 	getData.Inventory = inv.Inventory
 	getData.Count = inv.Count
 
-	getDataMsg, err := protocol.NewMessage("getdata", nd.Network, getData)
+	getDataMsg, err := protocol.NewMessage(nd.Network, "getdata", getData)
 	if err != nil {
 		return err
 	}

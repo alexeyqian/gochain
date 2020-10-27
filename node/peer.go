@@ -17,7 +17,7 @@ type Peer struct {
 	Address    net.Addr
 	Connection io.ReadWriteCloser
 	PongCh     chan uint64 // pass pong replies
-	Services   uint64      // describes feature supported by the peer
+	NodeType   uint64      // describes feature supported by the peer
 	UserAgent  string
 	Version    int32
 }
