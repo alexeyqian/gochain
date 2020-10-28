@@ -7,8 +7,8 @@ import (
 type UndoState struct{	
 	Revision uint32
 	NewIDs []string
-	RemovedValues map[string]Entity
-	OldValues map[string]Entity	
+	RemovedValues map[string][]byte
+	OldValues map[string][]byte	
 }
 
 type UndoableSet struct{
@@ -18,7 +18,11 @@ type UndoableSet struct{
 	revision uint32	
 }
 
-func NewUndoableSet(s Storage, name, elementType string) *UndoableSet{
+func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
+	if s.HasBucket(name){
+		return nil, fmt.Errorf("cannot create same set in storage")
+	}
+	
 	us := UndoableSet{
 		storage: s,
 		name: name,
@@ -30,7 +34,7 @@ func NewUndoableSet(s Storage, name, elementType string) *UndoableSet{
 	s.CreateSet(name, entityType)
 	s.CreateSet(name + "_state", "UndoState")
 
-	return &us
+	return &us, nil
 }
 
 func (us *UndoableSet) Create(e Entity) error{

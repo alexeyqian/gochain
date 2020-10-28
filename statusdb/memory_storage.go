@@ -1,45 +1,67 @@
 package statusdb
 
 import (
-	"strings"
-
-	"github.com/alexeyqian/gochain/entity"
+	"fmt"
 )
 
-var _data map[string]entity.Entity
+type MemPair struct {
+	Key  string
+	Data []byte
+}
+
+type MemBucket struct {
+	Pairs []MemPair
+}
 
 type MemoryStorage struct {
+	buckets map[string]MemBucket
 }
 
-func (dp *MemoryStorage) Open() {
-	_data = make(map[string]entity.Entity)
-}
-
-func (dp *MemoryStorage) Close() {
-
-}
-
-func (dp *MemoryStorage) Remove() {
-	for k := range _data {
-		delete(_data, k)
+func NewMemoryStorage() *MemoryStorage {
+	return &MemoryStorage{
+		buckets: make(map[string]MemBucket),
 	}
 }
 
-func (dp *MemoryStorage) GetAll(table string) []entity.Entity {
-	var res []entity.Entity
-	for key, value := range _data {
-		if strings.HasPrefix(key, table+"_") {
-			res = append(res, value)
-		}
+func (s *MemoryStorage) Open() {
+}
+
+func (s *MemoryStorage) Close() {
+}
+
+func (s *MemoryStorage) RemoveAll() {
+	s.buckets = nil
+}
+
+func (s *MemoryStorage) GetAll(bucket string) ([][]byte, error) {
+	if !s.HasBucket(bucket) {
+		return nil, fmt.Errorf("bucket: %s not exist", bucket)
 	}
-	return res
+
+	var res [][]byte
+	for _, value := range s.buckets[bucket] {
+		res = append(res, value)
+	}
+	return res, nil
 }
 
-func (dp *MemoryStorage) Get(key string) (entity.Entity, error) {
-	return _data[key], nil
+func (s *MemoryStorage) Get(bucket, key string) ([]byte, error) {
+	if !s.HasBucket(bucket) {
+		return nil, fmt.Errorf("bucket: %s not exist", bucket)
+	}
+	return s.buckets[bucket][key], nil
 }
 
-func (dp *MemoryStorage) Put(key string, e entity.Entity) error {
-	_data[key] = e
+func (s *MemoryStorage) Put(bucket, key string, data []byte) error {
+	if !s.HasBucket(bucket) {
+		s.buckets[bucket] = make([]MemPair)
+	}
+
+	s.buckets[bucket][key] = data
 	return nil
+}
+
+func (s *MemoryStorage) HasBucket(bucket string) bool {
+	_, ok := s.buckets[bucket]
+	return ok
 }

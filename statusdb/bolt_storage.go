@@ -7,18 +7,21 @@ import (
 
 	"github.com/alexeyqian/gochain/config"
 
-	"github.com/alexeyqian/gochain/entity"
 	"github.com/boltdb/bolt"
 )
 
-// BoltStorage implemented with Bolt DB
 type BoltStorage struct {
+	pathname string
+	db       *bolt.DB
 }
 
-var _db *bolt.DB
+func NewBoltStorage(path string) *BoltStorage {
+	return &BoltStorage{
+		pathname: path,
+	}
+}
 
-// Open database
-func (dp *BoltStorage) Open() {
+func (s *BoltStorage) Open() {
 	var err error
 
 	// Open the my.db data file in your current directory.
@@ -26,43 +29,25 @@ func (dp *BoltStorage) Open() {
 	// Bolt obtains a file lock on the data file so multiple processes cannot open the same database at the same time.
 	// Opening an already open Bolt database will cause it to hang until the other process closes it.
 	// To prevent an indefinite wait you can pass a timeout option to the Open()
-	_db, err = bolt.Open(config.BoltDbFileName, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	s.db, err = bolt.Open(s.pathname, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}
-	/*
-		err = _db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(GpoTable))
-
-			if b == nil { // create all buckets
-				tx.CreateBucket([]byte(GpoTable))
-				tx.CreateBucket([]byte(AccountTable))
-				tx.CreateBucket([]byte(ArticleTable))
-				tx.CreateBucket([]byte(CommentTable))
-				tx.CreateBucket([]byte(VoteTable))
-			}
-
-			return nil
-		})*/
-
 }
 
-// Close database
-func (dp *BoltStorage) Close() {
-	_db.Close()
+func (s *BoltStorage) Close() {
+	s.db.Close()
 }
 
-// Remove all data in db
-func (dp *BoltStorage) RemoveAll() {
+func (s *BoltStorage) RemoveAll() {
 	os.Remove(config.BoltDbFileName)
 }
 
-// Get an entity
-func (dp *BoltStorage) Get(bucket, key string) ([]byte, error) {
-	err = _db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(entityType))
+func (s *BoltStorage) Get(bucket, key string) ([]byte, error) {
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return nil, fmt.Errorf("bucket: %s not exist", entityType)
+			return nil, fmt.Errorf("bucket: %s not exist", bucket)
 		}
 		data := b.Get([]byte(key))
 		temp = make([]byte, len(data))
@@ -73,8 +58,8 @@ func (dp *BoltStorage) Get(bucket, key string) ([]byte, error) {
 	return result, err
 }
 
-func (dp *BoltStorage) Put(bucket, key string, data []byte) error {
-	err := _db.Update(func(tx *bolt.Tx) error {
+func (s *BoltStorage) Put(bucket, key string, data []byte) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			tx.CreateBucket([]byte(bucket))
@@ -88,49 +73,55 @@ func (dp *BoltStorage) Put(bucket, key string, data []byte) error {
 	return err
 }
 
-func (s *BoldStorage) Remove(key string) error {
-	var err error
-	err = _db.Update(func(tx *bolt.Tx) error {
-		data, _ := serializeEntity(entityType, e)
-		b := tx.Bucket([]byte(entityType))
-		err = b.Delete([]byte(key))
+func (s *BoldStorage) Delete(bucket, key string) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return nil // no bucket, do nothing
+		}
 
+		err := b.Delete([]byte(key))
 		return err
 	})
 
 	return err
 }
 
-// GetAll data from table
-func (dp *BoltStorage) GetAll(table string) []entity.Entity {
-	var err error
+func (s *BoltStorage) GetAll(bucket string) ([][]byte, error) {
 	var temp []byte
-	var res []entity.Entity
+	var res [][]byte
 
-	err = _db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(table))
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			temp = make([]byte, len(v))
-			copy(temp, v) // @attention Have to duplicate v out, which will be invalid out side of tx
-			e, _ := deserializeEntity(table, temp)
+			// @attention Have to duplicate v out, which will be invalid out side of tx
+			copy(temp, v)
 			res = append(res, e)
 		}
 
 		return err
 	})
 
-	return res
+	return res, err
+}
+
+func (s *BoltStorage) HasBucket(bucket string) bool {
+	return s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		return b != nil
+	})
 }
 
 /*
-func serializeEntity(entityType string, e entity.Entity) ([]byte, error) {
+func serializeEntity(bucket string, e entity.Entity) ([]byte, error) {
 	var err error
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
 
-	switch entityType {
+	switch bucket {
 	case GpoTable:
 		ce := e.(entity.Gpo)
 		err = encoder.Encode(ce)
@@ -156,11 +147,11 @@ func serializeEntity(entityType string, e entity.Entity) ([]byte, error) {
 	panic("serialize: unknown entity type")
 }
 
-func deserializeEntity(entityType string, data []byte) (entity.Entity, error) {
+func deserializeEntity(bucket string, data []byte) (entity.Entity, error) {
 	var err error
 	decoder := gob.NewDecoder(bytes.NewReader(data))
 
-	switch entityType {
+	switch bucket {
 	case GpoTable:
 		var e entity.Gpo
 		err = decoder.Decode(&e)

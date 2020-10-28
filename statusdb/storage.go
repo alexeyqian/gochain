@@ -8,8 +8,8 @@ type Storage interface {
 	Close()
 	RemoveAll()
 
-	// New GP style DB interface
-	GetAll(bucket string) [][]byte
+	// Get all items from bucket
+	GetAll(bucket string) ([][]byte, error)
 
 	/*
 	 * return error if buket or key is not found
@@ -27,6 +27,8 @@ type Storage interface {
 	 * delete key/value pairs, if buket or key not exist, just do nothing
 	 */
 	Delete(bucket, key string) error
+
+	HasBucket(bucket string) bool
 
 	/* NOT USED
 	 * delete a bucket, if not exist, do nothing

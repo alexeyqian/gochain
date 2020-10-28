@@ -21,7 +21,7 @@ type Storage interface {
 
 func TestUndo(t *testing.T) {
 	var storage Storage
-	storage = &BoltStorage{} // or &MemoryStorage{}
+	storage = NewBoltStorage("test_undo.db") // or &MemoryStorage{}
 
 	s := NewUndoableSet(storage, "book", Book)
 
