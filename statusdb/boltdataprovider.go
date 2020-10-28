@@ -13,14 +13,14 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// BoltDataProvider implemented with Bolt DB
-type BoltDataProvider struct {
+// BoltStorage implemented with Bolt DB
+type BoltStorage struct {
 }
 
 var _db *bolt.DB
 
 // Open database
-func (dp *BoltDataProvider) Open() {
+func (dp *BoltStorage) Open() {
 	var err error
 
 	// Open the my.db data file in your current directory.
@@ -50,12 +50,12 @@ func (dp *BoltDataProvider) Open() {
 }
 
 // Close database
-func (dp *BoltDataProvider) Close() {
+func (dp *BoltStorage) Close() {
 	_db.Close()
 }
 
 // Remove all data in db
-func (dp *BoltDataProvider) Remove() {
+func (dp *BoltStorage) Remove() {
 	_db.Update(func(tx *bolt.Tx) error {
 		tx.DeleteBucket([]byte(GpoTable))
 		tx.DeleteBucket([]byte(AccountTable))
@@ -70,7 +70,7 @@ func (dp *BoltDataProvider) Remove() {
 }
 
 // Get an entity
-func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
+func (dp *BoltStorage) Get(key string) (entity.Entity, error) {
 	var err error
 	var result entity.Entity
 	var temp []byte
@@ -88,7 +88,7 @@ func (dp *BoltDataProvider) Get(key string) (entity.Entity, error) {
 }
 
 // Put an entity
-func (dp *BoltDataProvider) Put(key string, e entity.Entity) error {
+func (dp *BoltStorage) Put(key string, e entity.Entity) error {
 	var err error
 	entityType := getPrefix(key)
 	err = _db.Update(func(tx *bolt.Tx) error {
@@ -103,7 +103,7 @@ func (dp *BoltDataProvider) Put(key string, e entity.Entity) error {
 }
 
 // GetAll data from table
-func (dp *BoltDataProvider) GetAll(table string) []entity.Entity {
+func (dp *BoltStorage) GetAll(table string) []entity.Entity {
 	var err error
 	var temp []byte
 	var res []entity.Entity

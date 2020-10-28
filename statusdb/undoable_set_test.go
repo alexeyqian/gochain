@@ -16,8 +16,14 @@ func NewBook(title, author, content string) *Book {
 	}
 }
 
+type Storage interface {
+}
+
 func TestUndo(t *testing.T) {
-	s := NewUndoableSet("book", Book)
+	var storage Storage
+	storage = &BoltStorage{} // or &MemoryStorage{}
+
+	s := NewUndoableSet(storage, "book", Book)
 
 	s.StartUndoSession()
 	for i := 0; i < 10; i++ {

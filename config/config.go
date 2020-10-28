@@ -1,5 +1,5 @@
 package config
 
-const DataProvider = "BoltDataProvider" //"MemDataProvider"
-//const DataProvider = "MemDataProvider"
+const Storage = "BoltStorage" //"MemoryStorage"
+//const Storage = "MemoryStorage"
 const BoltDbFileName = "data/status.db"

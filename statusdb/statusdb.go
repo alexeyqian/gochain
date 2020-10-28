@@ -7,51 +7,29 @@ import (
 
 const GpoKey = "gpo_1"
 const GpoTable = "gpo"
+const GpoStateTable = "gpostate"
 const AccountTable = "account"
+const AccountStateTable = "accountstate"
 const ArticleTable = "article"
+const ArticleStateTable = "articlestate"
 const CommentTable = "comment"
+const CommentStateTable = "commentstate"
 const VoteTable = "vote"
-
-// used as DI for easy testing
-// memory data provider for tesging
-// file data provider for production
-type DataProvider interface {
-	Open()
-	Close()
-	Remove()
-
-	GetAll(table string) []entity.Entity
-	Get(key string) (entity.Entity, error)
-	Put(key string, e entity.Entity) error
-}
-
-/*
-type Repository struct{
-	Open()
-	Close()
-	Remove()
-
-	GetByID(id string) (*Account, error)
-	Find() ([]*Account, error)
-	Create(user *Account) error
-	Update(user *Account) error
-	Delete(id string) error
-
-}*/
+const VoteStateTable = "votestate"
 
 //var _lastSavedPoint int = 0 // used for fast replay from giving point
-var _dp DataProvider
+var _dp Storage
 
 // NewDB(){
 
 //}
 
-// Open has parameter MemDataProvider
+// Open has parameter MemoryStorage
 func Open() {
-	if config.DataProvider == "MemDataProvider" {
-		_dp = &MemDataProvider{}
-	} else if config.DataProvider == "BoltDataProvider" {
-		_dp = &BoltDataProvider{}
+	if config.Storage == "MemoryStorage" {
+		_dp = &MemoryStorage{}
+	} else if config.Storage == "BoltStorage" {
+		_dp = &BoltStorage{}
 	} else {
 		panic("Unknown data provider")
 	}

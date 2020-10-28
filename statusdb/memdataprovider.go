@@ -8,24 +8,24 @@ import (
 
 var _data map[string]entity.Entity
 
-type MemDataProvider struct {
+type MemoryStorage struct {
 }
 
-func (dp *MemDataProvider) Open() {
+func (dp *MemoryStorage) Open() {
 	_data = make(map[string]entity.Entity)
 }
 
-func (dp *MemDataProvider) Close() {
+func (dp *MemoryStorage) Close() {
 
 }
 
-func (dp *MemDataProvider) Remove() {
+func (dp *MemoryStorage) Remove() {
 	for k := range _data {
 		delete(_data, k)
 	}
 }
 
-func (dp *MemDataProvider) GetAll(table string) []entity.Entity {
+func (dp *MemoryStorage) GetAll(table string) []entity.Entity {
 	var res []entity.Entity
 	for key, value := range _data {
 		if strings.HasPrefix(key, table+"_") {
@@ -35,11 +35,11 @@ func (dp *MemDataProvider) GetAll(table string) []entity.Entity {
 	return res
 }
 
-func (dp *MemDataProvider) Get(key string) (entity.Entity, error) {
+func (dp *MemoryStorage) Get(key string) (entity.Entity, error) {
 	return _data[key], nil
 }
 
-func (dp *MemDataProvider) Put(key string, e entity.Entity) error {
+func (dp *MemoryStorage) Put(key string, e entity.Entity) error {
 	_data[key] = e
 	return nil
 }

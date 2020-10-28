@@ -1,71 +1,102 @@
 package statusdb
 
+import (
+	"github.com/alexeyqian/gochain/entity"
+)
 
-type UndoState struct{
+
+type UndoState struct{	
 	Revision uint32
 	NewIDs []string
 	RemovedValues map[string]Entity
-	OldValues map[string]Entity
+	OldValues map[string]Entity	
 }
 
 type UndoableSet struct{
+	storage *Storage
+	name string
+	elementType string
+
 	revision uint32
-	container []entity
-	stateList []UndoState
+	entityTable []entity
+	entityStateTable []UndoState
+	
 }
 
-func (us *UndoableSet) Create(e Entity) (error){
-	entity.CreatedAt = time.Now().Unix()
-	entity.UpdatedAt = entity.CreatedAt
-	container.Insert(entity)
-	OnCreate(entity)
-	retur nil
+func NewUndoableSet(s Storage, name, elementType string) *UndoableSet{
+	return &UndoableSet{
+		storage: s,
+		name: name,
+		elementType: elementType,
+		revision: 0
+		entityTable: nil
+		entityStateTable: nil
+	}
+}
+
+func (us *UndoableSet) Create(e Entity) error{
+	if entity.GetEntityType(e) != us.elementType {
+		return fmt.Errorf("element type not match")
+	}
+
+	if !entity.HasID(e) {
+		return fmt.Errorf("entity must have ID.")
+	}
+
+	err := storage.Create(entity.GetEntityType(e), e)
+	if err != nil{ // sth like duplicated id
+		return err
+	}
+
+	us.onCreate(entity)
+	
+	return nil
 }
 
 func (us *UndoableSet) Update(e Entity) error{
-	existing, err := container.Find(e.ID)
+	// if !entity.HasID() return err
+	existing, err := entityTable.Find(e.ID)
 	if err != nil{
 		return err
 	}
 
-	OnModify(existing)
+	us.onModify(existing)
 
-	e.UpdatedAt = time.Now().Unix()
-	container.Replace(e.ID, e)
+	//e.UpdatedAt = time.Now().Unix()
+	entityTable.Update(e.ID, e)
 
 	return nil
 }
 
 func (us *UndoableSet) Remove(id string) error{
-	existing, err := container.Find(id)
+	existing, err := entityTable.Find(id)
 	if err != nil{
 		return err
 	}
 	
-	OnRemove(existing)
+	us.onRemove(existing)
 
-	container.Remove(e.ID)
+	entityTable.Remove(e.ID)
+
 	return nil
 }
 
 func (us *UndoableSet) Find(id string) (Entity, error){
-	return container.Find(id)
+	return entityTable.Find(id)
 }
 
 func (us *UndoableSet) Latest() (Entity, error){
-	if container.Size() <= 0{
-		return nil, fmt.Errorf("set is empty")
-	}
-
-	return container.Latest()
+	return entityTable.Latest()
 }
 
 func (us *UndoableSet) Size() int{
-	return container.Size()
+	return entityTable.Size()
 }
 
-func NewUndoableSet(name string, type interface{}){
-
+func NewUndoableSet(name string) {
+	return &UndoableSet{
+		Name: name,
+	}
 }
 
 func (us *UndoableSet) StartUndoSession(){
@@ -104,7 +135,7 @@ func (us *UndoableSet) UndoChangesFromLastSession(){
 		// restore removed values to database
 	}
 
-	us.stateList.Pop() // remove latest
+	us.entityStateTable.Pop() // remove latest
 	--us.Revision
 }
 
@@ -171,10 +202,10 @@ func (us *UndoableSet) onModify(e Entity){
 
 // helpers
 func (us *UndoableSet) hasSession() bool{
-	return len(us.stateList) > 0
+	return len(us.entityStateTable) > 0
 }
 
 // TODO: rename to head()
 func (us *UndoableSet) latestState() *UndoState{
-	return &us.stateList[len(us.stateList) - 1]
+	return &us.entityStateTable[len(us.entityStateTable) - 1]
 }

@@ -61,3 +61,13 @@ type Vote struct {
 	VotePower  uint64
 	Voter      string
 }
+
+// TODO: use reflection now, will be replaced with generics later
+func HasID(e Entity) bool {
+	return true
+}
+
+func GetEntityType(e Entity) string {
+	// using reflection
+	return ""
+}
