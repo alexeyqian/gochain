@@ -1,8 +1,6 @@
 package statusdb
 
-// used as DI for easy testing
-// memory data provider for tesging
-// file data provider for production
+// Simple key/value storage interface
 type Storage interface {
 	Open()
 	Close()

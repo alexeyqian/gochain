@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"encoding/gob"
 	"fmt"
 	"log"
 )
@@ -23,15 +21,4 @@ func CreateUuid() string {
 
 func GenerateKey() (*ecdsa.PrivateKey, error) {
 	return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-}
-
-func SerializeStruct(s interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(s)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
 }

@@ -1,5 +1,10 @@
 package entity
 
+import (
+	"bytes"
+	"encoding/gob"
+)
+
 type Entity interface {
 }
 
@@ -70,4 +75,20 @@ func HasID(e Entity) bool {
 func GetEntityType(e Entity) string {
 	// using reflection
 	return ""
+}
+
+func SerializeEntity(e Entity) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(e)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func DeserializeEntity(e Entity, data []byte) error {
+	dec := gob.NewDecoder(bytes.NewReader(data))
+	return dec.Decode(e)
 }

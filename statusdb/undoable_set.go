@@ -22,7 +22,7 @@ func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
 	if s.HasBucket(name){
 		return nil, fmt.Errorf("cannot create same set in storage")
 	}
-	
+
 	us := UndoableSet{
 		storage: s,
 		name: name,
@@ -37,12 +37,8 @@ func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
 	return &us, nil
 }
 
-func (us *UndoableSet) Create(e Entity) error{
-	if entity.GetEntityType(e) != us.elementType {
-		return fmt.Errorf("element type not match")
-	}
-
-	if !entity.HasID(e) {
+func (us *UndoableSet) Create(key string, data []byte) error{	
+	if key == "" {
 		return fmt.Errorf("entity must have ID.")
 	}
 

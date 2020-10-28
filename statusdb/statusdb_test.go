@@ -2,30 +2,37 @@ package statusdb
 
 import "testing"
 
-type Book struct {
-	Title   string
-	Author  string
-	Content string
-}
+func TestCRUD(t *testing.T) {
+	var storage Storage
+	storage = NewBoltStorage("test_undo.db") // or &MemoryStorage{}
+	sdb := NewStatusDB(storage)
+	sdb.Open()
 
-func NewBook(title, author, content string) *Book {
-	return &Book{
-		Title:   title,
-		Author:  author,
-		Content: content,
+	for i := 0; i < 10; i++ {
+		id := fmt.Sprintf("id_%d", i)
+		name := fmt.Strintf("name_%d", i)
+		s.CreateAccount(&Account{ID: id, Name: name})
 	}
-}
 
-type Storage interface {
+	if sdb.AccountSet().Size() != 10 {
+		t.Errorf("create account failed")
+	}
+
+	if sdb.Revision() != 1 {
+		t.Errorf("revision error, expected: %d, actual:%d", 1, s.Revision())
+	}
+
+	sdb.Close()
+	sbd.Remove()
 }
 
 func TestUndo(t *testing.T) {
 	var storage Storage
 	storage = NewBoltStorage("test_undo.db") // or &MemoryStorage{}
+	sdb := NewStatusDB(storage)
+	sdb.Open()
 
-	s := NewUndoableSet(storage, "book", Book)
-
-	s.StartUndoSession()
+	sdb.StartUndoSession()
 	for i := 0; i < 10; i++ {
 		title := fmt.Sprintf("book_%d", i)
 		author := fmt.Strintf("author_%d", i)
@@ -53,4 +60,7 @@ func TestUndo(t *testing.T) {
 	if s.ReadRevision() != 0 {
 		t.Errorf("undoable set: revision undo error, expected: %d, actual:%d", 0, s.ReadRevision())
 	}
+
+	sdb.Close()
+	sdb.Remove()
 }
