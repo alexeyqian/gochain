@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/alexeyqian/gochain/entity"
-	"github.com/alexeyqian/gochain/utils"
 )
 
 const GpoKey = "gpo_1"
@@ -43,66 +42,46 @@ func (sdb *StatusDB) Remove() {
 	sdb.store.RemoveAll()
 }
 
+// =========== gpo ================
+
 func (sdb *StatusDB) GetGpo() (*entity.Gpo, error) {
-	data, err := sdb.store.Get(GpoBucket, GpoKey)
-	if err != nil {
-		return nil, err
-	}
-
 	var e Gpo
-	e, err = utils.Deserialize(&e, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &e, nil
+	err := sdb.getEntityByID(GpoBucket, GpoKey, e)
+	return &e, err
 }
 
 func (sdb *StatusDB) CreateGpo(e *entity.Gpo) error {
-	data, err := utils.SerializeEntity(e)
-	if err != nil {
-		return err
-	}
-
-	return sdb.store.Put(GpoBucket, GpoKey, *e)
+	return sdb.createEntity(GpoBucket, *e)
 }
 
 func (sdb *StatusDB) UpdateGpo(e *entity.Gpo) error {
-	data, err := utils.SerializeEntity(e)
-	if err != nil {
-		return err
-	}
-
-	return sdb.store.Put(GpoBucket, GpoKey, *e)
+	return sdb.updateEntity(GpoBucket, *e)
 }
 
+// =========== account ================
+
 func (sdb *StatusDB) CreateAccount(e *entity.Account) error {
-	// TODO: validate if account is already exist
-	_dp.Put(addPrefix(AccountBucket, e.Id), *e)
-	return nil // TODO: check if account is already exist
+	return sdb.createEntity(AccountBucket, *e)
 }
 
 func UpdateAccount(e *entity.Account) error {
-	_dp.Put(addPrefix(AccountBucket, e.Id), *e)
-	return nil // TODO: check update errors
-}
-
-func GetAccounts() []*entity.Account {
-	var res []*entity.Account
-	for _, value := range _dp.GetAll(AccountBucket) {
-		temp, _ := value.(entity.Account)
-		res = append(res, &temp)
-	}
-	return res
+	return sdb.updateEntity(AccountBucket, *e)
 }
 
 func GetAccount(id string) (*entity.Account, error) {
-	e, err := _dp.Get(addPrefix(AccountBucket, id))
-	if err != nil {
-		return nil, err
+	var e entity.Account
+	err := sdb.getEntityByID(AccountBucket, id, e)
+	return &e, err
+}
+
+func (sdb *StatusDB) GetAccounts() []*entity.Account {
+	var res []*entity.Account
+	for _, value := range sdb.store.GetAll(AccountBucket) {
+		var e entity.Account
+		entity.DeserializeEntity(e, value)
+		res = append(res, &e)
 	}
-	ce, _ := e.(entity.Account)
-	return &ce, nil
+	return res
 }
 
 func GetAccountByName(name string) (*entity.Account, error) {
@@ -117,8 +96,10 @@ func GetAccountByName(name string) (*entity.Account, error) {
 	return res, nil
 }
 
+// =========== article ================
+
 func AddArticle(e *entity.Article) error {
-	_dp.Put(addPrefix(ArticleBucket, e.Id), *e)
+	_dp.Put(addPrefix(ArticleBucket, e.ID), *e)
 	return nil
 }
 
@@ -138,12 +119,14 @@ func GetArticle(id string) (*entity.Article, error) {
 }
 
 func UpdateArticle(e *entity.Article) error {
-	_dp.Put(addPrefix(ArticleBucket, e.Id), *e)
+	_dp.Put(addPrefix(ArticleBucket, e.ID), *e)
 	return nil // TODO: check update errors
 }
 
+// =========== comment ================
+
 func AddComment(e *entity.Comment) error {
-	_dp.Put(addPrefix(CommentBucket, e.Id), *e)
+	_dp.Put(addPrefix(CommentBucket, e.ID), *e)
 	return nil
 }
 
@@ -163,12 +146,13 @@ func GetComment(id string) (*entity.Comment, error) {
 }
 
 func UpdateComment(e *entity.Comment) error {
-	_dp.Put(addPrefix(CommentBucket, e.Id), *e)
+	_dp.Put(addPrefix(CommentBucket, e.ID), *e)
 	return nil // TODO: check update errors
 }
 
+// =========== vote ================
 func AddVote(e *entity.Vote) error {
-	_dp.Put(addPrefix(VoteBucket, e.Id), *e)
+	_dp.Put(addPrefix(VoteBucket, e.ID), *e)
 	return nil
 }
 
@@ -188,13 +172,20 @@ func GetVote(id string) (*entity.Vote, error) {
 }
 
 func UpdateVote(e *entity.Vote) error {
-	_dp.Put(addPrefix(VoteBucket, e.Id), *e)
+	_dp.Put(addPrefix(VoteBucket, e.ID), *e)
 	return nil // TODO: check update errors
 }
 
-func addPrefix(table string, key string) string {
-	return table + "_" + key
-}
+/*
+func (sdb *StatusDB) getAllEntities() []entity.Entity {
+	var res []entity.Entity
+	for _, data := range sdb.store.GetAll(bucket) {
+		var e entity.Entity // TODo: need redesign here, NOT WORKING
+		temp, _ := entity.DeserializeEntity(e, data)
+		res = append(res, &temp)
+	}
+	return res
+}*/
 
 func (sdb *StatusDB) getEntityByID(bucket, key string, e entity.Entity) error {
 	data, err := sdb.store.Get(bucket, key)
@@ -212,8 +203,23 @@ func (sdb *StatusDB) getEntityByID(bucket, key string, e entity.Entity) error {
 
 func (sdb *StatusDB) createEntity(bucket string, e entity.Entity) error {
 	if !entity.HasID(e) {
-		return fmt.Errorf("entity doesn't have ID")
+		return fmt.Errorf("create: entity doesn't have ID")
 	}
+
+	data, err := entity.SerializeEntity(e)
+	if err != nil {
+		return err
+	}
+
+	return sdb.store.Put(bucket, entity.GetID(e), data)
+}
+
+func (sdb *StatusDB) updateEntity(bucket string, e entity.Entity) error {
+	if !entity.HasID(e) {
+		return fmt.Errorf("update: entity doesn't have ID")
+	}
+
+	// TODO: check existence
 
 	data, err := entity.SerializeEntity(e)
 	if err != nil {

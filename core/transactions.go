@@ -33,7 +33,7 @@ const VoteParentTypeComment = "VoteParentTypeComment"
 const VoteParentTypeAccount = "VoteParentTypeAccount"
 
 type CreateAccountTransaction struct {
-	Id        string // [256]byte hash256
+	ID        string // [256]byte hash256
 	Signature string // should be [SIGBITS]byte
 	CreatedBy string
 	CreatedOn uint64
@@ -44,7 +44,7 @@ type CreateAccountTransaction struct {
 }
 
 type TransferCoinTransaction struct {
-	Id        string
+	ID        string
 	Signature string
 	CreatedBy string
 	CreatedOn uint64
@@ -56,7 +56,7 @@ type TransferCoinTransaction struct {
 }
 
 type CreateArticleTransaction struct {
-	Id        string
+	ID        string
 	Signature string
 	CreatedBy string
 	CreatedOn uint64
@@ -70,7 +70,7 @@ type CreateArticleTransaction struct {
 }
 
 type CreateCommentTransaction struct {
-	Id        string
+	ID        string
 	Signature string
 	CreatedBy string
 	CreatedOn uint64
@@ -83,7 +83,7 @@ type CreateCommentTransaction struct {
 }
 
 type VoteTransaction struct {
-	Id        string
+	ID        string
 	Signature string
 	CreatedBy string
 	CreatedOn uint64
@@ -157,11 +157,11 @@ func VerifyTxSignature(tx Transactioner) bool {
 }
 
 func GetTxId(tx Transactioner) string {
-	return reflect.ValueOf(tx).Elem().FieldByName("Id").String()
+	return reflect.ValueOf(tx).Elem().FieldByName("ID").String()
 }
 
 func SetTxId(tx Transactioner, id string) {
-	reflect.ValueOf(tx).Elem().FieldByName("Id").SetString(id)
+	reflect.ValueOf(tx).Elem().FieldByName("ID").SetString(id)
 }
 
 func GetTxSignature(tx Transactioner) string {

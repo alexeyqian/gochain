@@ -11,7 +11,7 @@ const MaxTransactionsInBlock = 10
 // for fast access block id/hash and data by array index
 
 type Block struct {
-	Id           string // 32 bytes (256 bits) hash value of the entire block
+	ID           string // 32 bytes (256 bits) hash value of the entire block
 	PrevBlockId  string
 	Num          uint64
 	MerkleRoot   string
@@ -24,7 +24,7 @@ type Block struct {
 }
 
 func (b *Block) SerializeBlockWitoutId() []byte {
-	// serialize all fields except Id into byte array
+	// serialize all fields except ID into byte array
 	return nil
 }
 
@@ -33,7 +33,7 @@ func (b *Block) CalculateHash() {
 	// fill data with block field bytes
 	hash := sha256.Sum256(data)
 	var temp []byte = hash[:]
-	b.Id = string(temp)
+	b.ID = string(temp)
 }
 
 func SerializeBlock(b *Block) ([]byte, error) {

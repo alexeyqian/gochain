@@ -47,8 +47,8 @@ func CreateTestBlocks(count int, datadir string) {
 		if gpo.BlockNum != b.Num {
 			panic(fmt.Sprintf("gpo num expected: %d, actual: %d", 20, gpo.BlockNum))
 		}
-		if gpo.BlockId != b.Id {
-			panic(fmt.Sprintf("gpo id expected: %s, actual: %s", b.Id, gpo.BlockId))
+		if gpo.BlockId != b.ID {
+			panic(fmt.Sprintf("gpo id expected: %s, actual: %s", b.ID, gpo.BlockId))
 		}
 		if gpo.Time != b.CreatedOn {
 			panic(fmt.Sprintf("gpo time expected: %d, actual: %d", b.CreatedOn, gpo.Time))
@@ -59,8 +59,8 @@ func CreateTestBlocks(count int, datadir string) {
 
 		// TODO: validate block and previous block hash/linking
 		prevb, _ := chain.GetBlock(i - 1)
-		//fmt.Printf("prevb id: %s", prevb.Id)
-		if b.PrevBlockId != prevb.Id {
+		//fmt.Printf("prevb id: %s", prevb.ID)
+		if b.PrevBlockId != prevb.ID {
 			panic(fmt.Sprintf(("block linking is broken"))
 		}
 

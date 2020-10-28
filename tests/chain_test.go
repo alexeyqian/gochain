@@ -28,7 +28,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	acc := accounts[0]
-	if acc.Id == "" || acc.Coin != core.InitAmount || acc.Credit != 0 {
+	if acc.ID == "" || acc.Coin != core.InitAmount || acc.Credit != 0 {
 		t.Errorf("init account error.")
 	}
 
@@ -57,7 +57,7 @@ func TestGenerateBlock(t *testing.T) {
 	b, _ := chain.GetBlock(int(tempb.Num))
 
 	gpo, _ := statusdb.GetGpo()
-	if gpo.BlockNum != 1 || gpo.BlockId != b.Id {
+	if gpo.BlockNum != 1 || gpo.BlockId != b.ID {
 		t.Errorf("generate block error")
 	}
 
@@ -104,8 +104,8 @@ func TestGenerateBlocks(t *testing.T) {
 		if gpo.BlockNum != b.Num {
 			t.Errorf("gpo num expected: %d, actual: %d", 20, gpo.BlockNum)
 		}
-		if gpo.BlockId != b.Id {
-			t.Errorf("gpo id expected: %s, actual: %s", b.Id, gpo.BlockId)
+		if gpo.BlockId != b.ID {
+			t.Errorf("gpo id expected: %s, actual: %s", b.ID, gpo.BlockId)
 		}
 		if gpo.Time != b.CreatedOn {
 			t.Errorf("gpo time expected: %d, actual: %d", b.CreatedOn, gpo.Time)
@@ -116,8 +116,8 @@ func TestGenerateBlocks(t *testing.T) {
 
 		// TODO: validate block and previous block hash/linking
 		prevb, _ := chain.GetBlock(i - 1)
-		//fmt.Printf("prevb id: %s", prevb.Id)
-		if b.PrevBlockId != prevb.Id {
+		//fmt.Printf("prevb id: %s", prevb.ID)
+		if b.PrevBlockId != prevb.ID {
 			t.Errorf("block linking is broken")
 		}
 

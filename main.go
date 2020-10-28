@@ -76,7 +76,7 @@ func main() {
 
 	ledger.Open("test_data")
 	sec := time.Now().Unix()
-	b := core.Block{Id: utils.CreateUuid(), Num: 0, CreatedOn: uint64(sec), Witness: "init_miner"}
+	b := core.Block{ID: utils.CreateUuid(), Num: 0, CreatedOn: uint64(sec), Witness: "init_miner"}
 	ledger.Append(core.SerializeBlock(&b))
 	br := ledger.Read(0)
 	fmt.Printf("%+v\n", core.UnSerializeBlock(br))

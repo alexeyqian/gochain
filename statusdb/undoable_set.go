@@ -146,7 +146,7 @@ func (us *UndoableSet) onCreate(e *Entity){
 	}
 
 	state := us.latestState()
-	state.NewIDs := append(state.NewIDs, e.Id)
+	state.NewIDs := append(state.NewIDs, e.ID)
 
 }
 

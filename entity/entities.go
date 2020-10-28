@@ -3,6 +3,7 @@ package entity
 import (
 	"bytes"
 	"encoding/gob"
+	"reflect"
 )
 
 type Entity interface {
@@ -18,12 +19,12 @@ type Gpo struct {
 }
 
 type Witness struct {
-	Id   string
+	ID   string
 	Name string
 }
 
 type Account struct {
-	Id           string
+	ID           string
 	Name         string
 	CreatedOn    uint64
 	Coin         uint64
@@ -36,7 +37,7 @@ type Account struct {
 }
 
 type Article struct {
-	Id        string
+	ID        string
 	Author    string
 	Title     string
 	Body      string
@@ -47,7 +48,7 @@ type Article struct {
 }
 
 type Comment struct {
-	Id        string
+	ID        string
 	ParentId  string
 	CommentId string
 	Commentor string
@@ -59,7 +60,7 @@ type Comment struct {
 }
 
 type Vote struct {
-	Id         string
+	ID         string
 	ParentId   string
 	ParentType string
 	Direction  int8
@@ -67,14 +68,12 @@ type Vote struct {
 	Voter      string
 }
 
-// TODO: use reflection now, will be replaced with generics later
 func HasID(e Entity) bool {
-	return true
+	return reflect.ValueOf(e).Elem().FieldByName("ID").String() != ""
 }
 
-func GetEntityType(e Entity) string {
-	// using reflection
-	return ""
+func GetID(e Entity) string {
+	return reflect.ValueOf(e).Elem().FieldByName("ID").String()
 }
 
 func SerializeEntity(e Entity) ([]byte, error) {

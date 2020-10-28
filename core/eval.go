@@ -52,7 +52,7 @@ func (tx CreateAccountTransaction) Apply() error {
 	}
 
 	var acc entity.Account
-	acc.Id = tx.AccountId
+	acc.ID = tx.AccountId
 	acc.Name = tx.AccountName
 	statusdb.AddAccount(&acc)
 
@@ -84,7 +84,7 @@ func (tx CreateArticleTransaction) Apply() error {
 	}
 
 	var article entity.Article
-	article.Id = tx.ArticleId
+	article.ID = tx.ArticleId
 	article.Author = tx.Author
 	article.Title = tx.Title
 	article.Body = tx.Body
@@ -105,7 +105,7 @@ func (tx CreateCommentTransaction) Apply() error {
 	}
 
 	var comment entity.Comment
-	comment.Id = tx.CommentId
+	comment.ID = tx.CommentId
 	comment.ParentId = tx.ParentId
 	comment.Commentor = tx.Commentor
 	comment.Body = tx.Body
@@ -122,7 +122,7 @@ func (tx VoteTransaction) Apply() error {
 	}
 
 	var vote entity.Vote
-	vote.Id = tx.Id
+	vote.ID = tx.ID
 	vote.ParentId = tx.ParentId
 	vote.ParentType = tx.ParentType
 	vote.Direction = tx.Direction

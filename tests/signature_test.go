@@ -13,7 +13,7 @@ func TestGetAndSetTx(t *testing.T) {
 	_, pubkey := wallet.MakeKeyPair()
 
 	var tx core.CreateAccountTransaction
-	tx.Id = "hello"
+	tx.ID = "hello"
 	tx.Signature = "world"
 	tx.PublicKey = string(pubkey)
 
@@ -27,7 +27,7 @@ func TestGetAndSetTx(t *testing.T) {
 
 	core.SetTxId(&tx, "updated_id")
 	core.SetTxSignature(&tx, "updated_sig")
-	if tx.Id != "updated_id" || tx.Signature != "updated_sig" {
+	if tx.ID != "updated_id" || tx.Signature != "updated_sig" {
 		t.Errorf("cannot set tx data by using reflection.")
 	}
 	//fmt.Println("set tx id and sig success!")
@@ -38,7 +38,7 @@ func TestSigning(t *testing.T) {
 	privkey, pubkey := wallet.MakeKeyPair()
 
 	var tx core.CreateAccountTransaction
-	tx.Id = ""
+	tx.ID = ""
 	tx.Signature = ""
 	tx.CreatedBy = "init"
 	tx.CreatedOn = uint64(time.Now().Unix())

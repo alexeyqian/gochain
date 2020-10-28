@@ -18,9 +18,9 @@ func TestVoteAccount(t *testing.T) {
 	chain.GenerateBlock()
 
 	var tx core.VoteTransaction
-	tx.Id = utils.CreateUuid()
+	tx.ID = utils.CreateUuid()
 	alice, _ := statusdb.GetAccountByName("alice")
-	tx.ParentId = alice.Id
+	tx.ParentId = alice.ID
 	tx.ParentType = core.VoteParentTypeAccount
 	tx.Direction = 1
 	tx.Voter = "bob"
@@ -29,7 +29,7 @@ func TestVoteAccount(t *testing.T) {
 	chain.AddPendingTx(tx)
 	chain.GenerateBlock()
 
-	vote, _ := statusdb.GetVote(tx.Id)
+	vote, _ := statusdb.GetVote(tx.ID)
 	if vote == nil {
 		t.Errorf("create vote error")
 	}

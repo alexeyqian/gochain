@@ -88,7 +88,7 @@ func GenerateBlock() *core.Block {
 
 	gpo, _ = statusdb.GetGpo()
 
-	b.Id = utils.CreateUuid()
+	b.ID = utils.CreateUuid()
 	b.PrevBlockId = gpo.BlockId
 	b.Num = gpo.BlockNum + uint64(1)
 	sec := time.Now().Unix()
@@ -105,7 +105,7 @@ func GenerateBlock() *core.Block {
 	}
 
 	gpo, _ = statusdb.GetGpo()
-	gpo.BlockId = b.Id
+	gpo.BlockId = b.ID
 	gpo.BlockNum = b.Num
 	gpo.Time = b.CreatedOn
 	gpo.Supply += core.AmountPerBlock
@@ -130,14 +130,14 @@ func genesis() {
 
 	// update chain database
 	var acc entity.Account
-	acc.Id = utils.CreateUuid() // should be public key string
+	acc.ID = utils.CreateUuid() // should be public key string
 	acc.Name = core.InitWitness
 	acc.CreatedOn = core.GenesisTime
 	acc.Coin = core.InitAmount
 	statusdb.AddAccount(&acc)
 
 	// update ledger, create a dummy block 0
-	b := core.Block{Id: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
+	b := core.Block{ID: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
 	sb, _ := core.SerializeBlock(&b)
 	ledger.Append(sb)
 }
