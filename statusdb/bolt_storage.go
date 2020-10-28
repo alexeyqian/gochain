@@ -1,9 +1,7 @@
 package statusdb
 
 import (
-	"bytes"
-	"encoding/gob"
-	"log"
+	"fmt"
 	"os"
 	"time"
 
@@ -30,22 +28,22 @@ func (dp *BoltStorage) Open() {
 	// To prevent an indefinite wait you can pass a timeout option to the Open()
 	_db, err = bolt.Open(config.BoltDbFileName, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
+	/*
+		err = _db.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(GpoTable))
 
-	err = _db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(GpoTable))
+			if b == nil { // create all buckets
+				tx.CreateBucket([]byte(GpoTable))
+				tx.CreateBucket([]byte(AccountTable))
+				tx.CreateBucket([]byte(ArticleTable))
+				tx.CreateBucket([]byte(CommentTable))
+				tx.CreateBucket([]byte(VoteTable))
+			}
 
-		if b == nil { // create all buckets
-			tx.CreateBucket([]byte(GpoTable))
-			tx.CreateBucket([]byte(AccountTable))
-			tx.CreateBucket([]byte(ArticleTable))
-			tx.CreateBucket([]byte(CommentTable))
-			tx.CreateBucket([]byte(VoteTable))
-		}
-
-		return nil
-	})
+			return nil
+		})*/
 
 }
 
@@ -55,46 +53,47 @@ func (dp *BoltStorage) Close() {
 }
 
 // Remove all data in db
-func (dp *BoltStorage) Remove() {
-	_db.Update(func(tx *bolt.Tx) error {
-		tx.DeleteBucket([]byte(GpoTable))
-		tx.DeleteBucket([]byte(AccountTable))
-		tx.DeleteBucket([]byte(ArticleTable))
-		tx.DeleteBucket([]byte(CommentTable))
-		tx.DeleteBucket([]byte(VoteTable))
-
-		return nil
-	})
-
+func (dp *BoltStorage) RemoveAll() {
 	os.Remove(config.BoltDbFileName)
 }
 
 // Get an entity
-func (dp *BoltStorage) Get(key string) (entity.Entity, error) {
-	var err error
-	var result entity.Entity
-	var temp []byte
-
-	entityType := getPrefix(key)
+func (dp *BoltStorage) Get(bucket, key string) ([]byte, error) {
 	err = _db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(entityType))
+		if b == nil {
+			return nil, fmt.Errorf("bucket: %s not exist", entityType)
+		}
 		data := b.Get([]byte(key))
 		temp = make([]byte, len(data))
-		copy(temp, data) // @attention Have to duplicate the data out, it will invalid out tx
-		result, err = deserializeEntity(entityType, temp)
-		return err
+		// @attention Have to duplicate the data out, it will invalid out tx
+		copy(temp, data)
+		return temp, err
 	})
 	return result, err
 }
 
-// Put an entity
-func (dp *BoltStorage) Put(key string, e entity.Entity) error {
+func (dp *BoltStorage) Put(bucket, key string, data []byte) error {
+	err := _db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			tx.CreateBucket([]byte(bucket))
+		}
+
+		err := b.Put([]byte(key), data)
+
+		return err
+	})
+
+	return err
+}
+
+func (s *BoldStorage) Remove(key string) error {
 	var err error
-	entityType := getPrefix(key)
 	err = _db.Update(func(tx *bolt.Tx) error {
 		data, _ := serializeEntity(entityType, e)
 		b := tx.Bucket([]byte(entityType))
-		err = b.Put([]byte(key), data)
+		err = b.Delete([]byte(key))
 
 		return err
 	})
@@ -125,6 +124,7 @@ func (dp *BoltStorage) GetAll(table string) []entity.Entity {
 	return res
 }
 
+/*
 func serializeEntity(entityType string, e entity.Entity) ([]byte, error) {
 	var err error
 	var result bytes.Buffer
@@ -190,3 +190,4 @@ func getPrefix(key string) string {
 	index := bytes.Index([]byte(key), []byte("_"))
 	return key[0:index]
 }
+*/

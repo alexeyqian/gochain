@@ -1,24 +1,35 @@
 package statusdb
 
-import "github.com/alexeyqian/gochain/entity"
-
 // used as DI for easy testing
 // memory data provider for tesging
 // file data provider for production
 type Storage interface {
 	Open()
 	Close()
-	Remove()
+	RemoveAll()
 
 	// New GP style DB interface
-	GetAll(table string) []entity.Entity
-	Get(key string) (entity.Entity, error)
-	Put(key string, e entity.Entity) error
+	GetAll(bucket string) [][]byte
 
-	// Traditinal CRUD Style DB interface
-	//GetByID(id string) (*Entity, error)
-	//Find() ([]*Entity, error)
-	//Create(user *Entity) error
-	//Update(user *Entity) error
-	//Delete(id string) error
+	/*
+	 * return error if buket or key is not found
+	 */
+	Get(bucket, key string) ([]byte, error)
+
+	/*
+	 * if buket is not exist, create a new bucket
+	 * if key not exist, create new key and value pair
+	 * if key is already exist, replace the old value
+	 */
+	Put(bucket, key string, data []byte) error
+
+	/*
+	 * delete key/value pairs, if buket or key not exist, just do nothing
+	 */
+	Delete(bucket, key string) error
+
+	/* NOT USED
+	 * delete a bucket, if not exist, do nothing
+	 */
+	//DeleteBucket(bucket string) error
 }

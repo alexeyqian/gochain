@@ -4,7 +4,6 @@ import (
 	"github.com/alexeyqian/gochain/entity"
 )
 
-
 type UndoState struct{	
 	Revision uint32
 	NewIDs []string
@@ -16,22 +15,22 @@ type UndoableSet struct{
 	storage *Storage
 	name string
 	elementType string
-
-	revision uint32
-	entityTable []entity
-	entityStateTable []UndoState
-	
+	revision uint32	
 }
 
 func NewUndoableSet(s Storage, name, elementType string) *UndoableSet{
-	return &UndoableSet{
+	us := UndoableSet{
 		storage: s,
 		name: name,
 		elementType: elementType,
-		revision: 0
-		entityTable: nil
-		entityStateTable: nil
+		revision: 0,
 	}
+
+	// create data set and data state set
+	s.CreateSet(name, entityType)
+	s.CreateSet(name + "_state", "UndoState")
+
+	return &us
 }
 
 func (us *UndoableSet) Create(e Entity) error{
@@ -43,18 +42,21 @@ func (us *UndoableSet) Create(e Entity) error{
 		return fmt.Errorf("entity must have ID.")
 	}
 
-	err := storage.Create(entity.GetEntityType(e), e)
+	err := storage.Put(entity.GetID(e), e)
 	if err != nil{ // sth like duplicated id
 		return err
 	}
 
 	us.onCreate(entity)
-	
+
 	return nil
 }
 
 func (us *UndoableSet) Update(e Entity) error{
-	// if !entity.HasID() return err
+	if !entity.HasID(e) {
+		return fmt.Errorf("entity must have ID.")
+	}
+
 	existing, err := entityTable.Find(e.ID)
 	if err != nil{
 		return err
@@ -63,12 +65,16 @@ func (us *UndoableSet) Update(e Entity) error{
 	us.onModify(existing)
 
 	//e.UpdatedAt = time.Now().Unix()
-	entityTable.Update(e.ID, e)
+	storage.Put(entity.GetID(e), e)
 
 	return nil
 }
 
 func (us *UndoableSet) Remove(id string) error{
+	if id == ""{
+		return fmt.Errorf("id cannot be empty")
+	}
+
 	existing, err := entityTable.Find(id)
 	if err != nil{
 		return err
@@ -76,7 +82,7 @@ func (us *UndoableSet) Remove(id string) error{
 	
 	us.onRemove(existing)
 
-	entityTable.Remove(e.ID)
+	Storage.Remove(addPrefix(id))
 
 	return nil
 }
@@ -91,12 +97,6 @@ func (us *UndoableSet) Latest() (Entity, error){
 
 func (us *UndoableSet) Size() int{
 	return entityTable.Size()
-}
-
-func NewUndoableSet(name string) {
-	return &UndoableSet{
-		Name: name,
-	}
 }
 
 func (us *UndoableSet) StartUndoSession(){
