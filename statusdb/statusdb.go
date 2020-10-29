@@ -78,7 +78,7 @@ func (sdb *StatusDB) GetAccounts() []*entity.Account {
 	var res []*entity.Account
 	for _, value := range sdb.store.GetAll(AccountBucket) {
 		var e entity.Account
-		entity.DeserializeEntity(e, value)
+		entity.Deserialize(e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -116,7 +116,7 @@ func GetArticles() []*entity.Article {
 	var res []*entity.Article
 	for _, value := range sdb.store.GetAll(ArticleBucket) {
 		var e entity.Article
-		entity.DeserializeEntity(e, value)
+		entity.Deserialize(e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -142,7 +142,7 @@ func GetComments() []*entity.Comment {
 	var res []*entity.Comment
 	for _, value := range sdb.store.GetAll(CommentBucket) {
 		var e entity.Comment
-		entity.DeserializeEntity(e, value)
+		entity.Deserialize(e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -168,7 +168,7 @@ func GetVotes() []*entity.Vote {
 	var res []*entity.Vote
 	for _, value := range sdb.store.GetAll(VoteBucket) {
 		var e entity.Vote
-		entity.DeserializeEntity(e, value)
+		entity.Deserialize(e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -180,7 +180,7 @@ func (sdb *StatusDB) createEntity(bucket string, e entity.Entity) error {
 		return fmt.Errorf("create: entity doesn't have ID")
 	}
 
-	data, err := entity.SerializeEntity(e)
+	data, err := entity.Serialize(e)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (sdb *StatusDB) updateEntity(bucket string, e entity.Entity) error {
 
 	// TODO: check existence
 
-	data, err := entity.SerializeEntity(e)
+	data, err := entity.Serialize(e)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (sdb *StatusDB) getEntityByID(bucket, key string, e entity.Entity) error {
 		return err
 	}
 
-	err = entity.DeserializeEntity(e, data)
+	err = entity.Deserialize(e, data)
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func (sdb *StatusDB) getAllEntities() []entity.Entity {
 	var res []entity.Entity
 	for _, data := range sdb.store.GetAll(bucket) {
 		var e entity.Entity // TODo: need redesign here, NOT WORKING
-		temp, _ := entity.DeserializeEntity(e, data)
+		temp, _ := entity.Deserialize(e, data)
 		res = append(res, &temp)
 	}
 	return res

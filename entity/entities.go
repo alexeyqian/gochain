@@ -76,7 +76,7 @@ func GetID(e Entity) string {
 	return reflect.ValueOf(e).Elem().FieldByName("ID").String()
 }
 
-func SerializeEntity(e Entity) ([]byte, error) {
+func Serialize(e Entity) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(e)
@@ -87,7 +87,7 @@ func SerializeEntity(e Entity) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func DeserializeEntity(e Entity, data []byte) error {
+func Deserialize(e Entity, data []byte) error {
 	dec := gob.NewDecoder(bytes.NewReader(data))
 	return dec.Decode(e)
 }

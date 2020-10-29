@@ -79,7 +79,7 @@ func (us *UndoableSet) onCreate(key string) error{
 
 	state := us.latestState()
 	state.newIDs = append(state.newIDs, key)
-	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
+	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
 
 	return nil
 }
@@ -129,7 +129,7 @@ func (us *UndoableSet) onUpdate(key string, existing []byte) error{
 	}
 
 	state.oldValues[key] = existing
-	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
+	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
 	
 	return nil
 }
@@ -196,7 +196,7 @@ func onDelete(key string, existing []byte) error {
 
 	state.RemoveValues[key] = existing
 	
-	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
+	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
 }
 
 func (us *UndoableSet) Get(key string) ([]byte, error){
@@ -210,7 +210,7 @@ func (us *UndoableSet) Size() int{
 func (us *UndoableSet) StartUndoSession(){
 	var state UndoState
 	state.revision = us.latestRevision + 1
-	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
+	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
 }
 
 func (us *UndoableSet) CommitFromLastSession(){
@@ -261,6 +261,6 @@ func (us *UndoableSet) latestState() *UndoState{
 	}
 
 	var state UndoState
-	entity.DeserializeEntity(&state, data)
+	entity.Deserialize(&state, data)
 	return &state
 }
