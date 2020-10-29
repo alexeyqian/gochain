@@ -3,8 +3,15 @@ package undodb
 import (
 	"fmt"
 
+	"github.com/alexeyqian/gochain/utils"
+
+	"github.com/alexeyqian/gochain/entity"
 	"github.com/alexeyqian/gochain/store"
 )
+
+type MetaData struct {
+	Revision uint32
+}
 
 type Revision struct {
 	num       uint32
@@ -14,10 +21,6 @@ type Revision struct {
 	data      []byte
 }
 
-type Table struct {
-	name string
-}
-
 type UndoableDB struct {
 	store store.Storage
 }
@@ -25,6 +28,7 @@ type UndoableDB struct {
 // these two table names are reserved by database
 // user should not be able to create same table name
 const metaTable = "_meta_"
+const metaKey = "_meta_key_"
 const revisionTable = "_revision_"
 
 func NewUndoableDB(storage store.Storage) *UndoableDB {
@@ -52,6 +56,12 @@ func (udb *UndoableDB) Open() error {
 		if err != nil {
 			return err
 		}
+
+		// init some meta data
+		metaData := MetaData{
+			Revision: 0,
+		}
+		udb.store.Put(metaTable, metaKey, entity.Serialize(metaData))
 	}
 	return nil
 }
@@ -90,6 +100,10 @@ func (udb *UndoableDB) CreateTable(name string) error {
 	return udb.store.CreateBucket(name)
 }
 
+func (udb *UndoableDB) RowCount(table string) int {
+	return udb.store.RowCount(table)
+}
+
 func (udb *UndoableDB) Create(table, key string, data []byte) error {
 	if table == "" {
 		return fmt.Errorf("create: table is empty")
@@ -104,15 +118,16 @@ func (udb *UndoableDB) Create(table, key string, data []byte) error {
 		return fmt.Errorf("create: key already exist.")
 	}
 
-	// TODO: need a transaction here
+	// TODO: need a transaction here // TRANSACTION HERE
+	// TODO: store.BatchInTransaction(operations)
 	// 1. update state table
-	//err := udb.onCreate(table, key)
-	//if err != nil {
-	//	return err
-	//}
+	err := udb.onCreate(table, key)
+	if err != nil {
+		return err
+	}
 
 	// 2. save to data table
-	err := udb.store.Put(table, key, data)
+	err = udb.store.Put(table, key, data)
 	if err != nil {
 		return err
 	}
@@ -126,16 +141,47 @@ func (udb *UndoableDB) Create(table, key string, data []byte) error {
 	return nil
 }
 
-/*
-func (udb *UndoableDB) onCreate(key string) error {
-	if !udb.hasSession() {
+func (udb *UndoableDB) onCreate(table, key string) error {
+	num := udb.getCurrentRevision()
+	if num == 0 { // no undo session
 		return nil
 	}
+	revision := Revision{
+		num:       num,
+		table:     table,
+		operation: "create",
+		key:       key,
+	}
 
-	state := us.latestState()
-	state.newIDs = append(state.newIDs, key)
-	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
+	udb.store.Put(revisionTable, utils.CreateUuid(), entity.Serialize(revision))
 
 	return nil
 }
-*/
+
+func (udb *UndoableDB) StartUndoSession() uint32 {
+	meta := udb.GetMetaData()
+	meta.Revision++
+	udb.updateMetaData(meta)
+	return meta.Revision
+}
+
+func (udb *UndoableDB) getCurrentRevision() uint32 {
+	return udb.GetMetaData().Revision
+}
+
+func (udb *UndoableDB) GetMetaData() *MetaData {
+	data, err := udb.store.Get(metaTable, metaKey)
+	if err != nil {
+		panic("cannot get meta data")
+	}
+	var meta MetaData
+	entity.Deserialize(&meta, data)
+	return &meta
+}
+
+func (udb *UndoableDB) updateMetaData(meta *MetaData) {
+	err := udb.store.Put(metaTable, metaKey, entity.Serialize(*meta))
+	if err != nil {
+		panic(err)
+	}
+}

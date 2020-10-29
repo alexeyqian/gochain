@@ -76,18 +76,21 @@ func GetID(e Entity) string {
 	return reflect.ValueOf(e).Elem().FieldByName("ID").String()
 }
 
-func Serialize(e Entity) ([]byte, error) {
+func Serialize(e Entity) []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(e)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return buf.Bytes(), nil
+	return buf.Bytes()
 }
 
-func Deserialize(e Entity, data []byte) error {
+func Deserialize(e Entity, data []byte) {
 	dec := gob.NewDecoder(bytes.NewReader(data))
-	return dec.Decode(e)
+	err := dec.Decode(e)
+	if err != nil {
+		panic(err)
+	}
 }

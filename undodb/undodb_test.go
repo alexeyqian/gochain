@@ -17,7 +17,7 @@ type Book struct {
 	Price        float32
 }
 
-func TestCreateUndoDB(t *testing.T) {
+func TestCreate(t *testing.T) {
 	pathname := "test.db"
 	storage := store.NewBoltStorage(pathname)
 	udb := NewUndoableDB(storage)
@@ -34,6 +34,11 @@ func TestCreateUndoDB(t *testing.T) {
 		t.Errorf("revision table is not created")
 	}
 
+	metaData := udb.GetMetaData()
+	if metaData.Revision != 0 {
+		t.Errorf("revision is not correct")
+	}
+
 	table := "book"
 	err = udb.CreateTable(table)
 	if err != nil || !udb.HasTable(table) {
@@ -48,20 +53,20 @@ func TestCreateUndoDB(t *testing.T) {
 			PublishedYer: 1980 + i,
 			Price:        100.00 + float32(i),
 		}
-		fmt.Printf("create book %d is %+v\n", i, book)
-		serializedBook, err := entity.Serialize(book)
+		//fmt.Printf("create book %d is %+v\n", i, book)
 		if err != nil {
 			t.Error(err)
 		}
-		err = udb.Create(table, book.ID, serializedBook)
+		err = udb.Create(table, book.ID, entity.Serialize(book))
 		if err != nil {
 			t.Error(err)
 		}
 	}
 
-	//if udb.RowCount(table) != 10 {
-	//	t.Errorf("row count is not correct")
-	//}
+	rowCount := udb.RowCount(table)
+	if rowCount != 10 {
+		t.Errorf("row count expected: %d, actual: %d", 10, rowCount)
+	}
 
 	for i := 0; i < 10; i++ {
 		data, err := udb.Get(table, fmt.Sprintf("id_%d", i))
@@ -77,7 +82,7 @@ func TestCreateUndoDB(t *testing.T) {
 			t.Errorf("book title error")
 		}
 
-		fmt.Printf("got book %d is %+v\n", i, book)
+		//fmt.Printf("got book %d is %+v\n", i, book)
 	}
 
 	udb.Close()

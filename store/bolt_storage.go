@@ -155,3 +155,22 @@ func (s *BoltStorage) CreateBucket(bucket string) error {
 
 	return err
 }
+
+func (s *BoltStorage) RowCount(bucket string) int {
+	count := 0
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return fmt.Errorf("bucket not exist")
+		}
+
+		count = b.Stats().KeyN
+		return nil
+	})
+
+	if err != nil {
+		return 0
+	} else {
+		return count
+	}
+}
