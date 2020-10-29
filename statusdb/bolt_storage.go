@@ -115,6 +115,19 @@ func (s *BoltStorage) HasBucket(bucket string) bool {
 	})
 }
 
+func (s *BoltStorage) CreateBucket(bucket) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			tx.CreateBucket([]byte(bucket))
+		}
+
+		return err
+	})
+
+	return err
+}
+
 /*
 func serializeEntity(bucket string, e entity.Entity) ([]byte, error) {
 	var err error

@@ -184,7 +184,7 @@ func (sdb *StatusDB) createEntity(bucket string, e entity.Entity) error {
 	if err != nil {
 		return err
 	}
-
+	// sdb.sets[bucket].Create(id, data)
 	return sdb.store.Put(bucket, entity.GetID(e), data)
 }
 

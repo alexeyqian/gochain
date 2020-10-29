@@ -26,7 +26,9 @@ type Storage interface {
 	 */
 	Delete(bucket, key string) error
 
+	CreateBucket(bucket string) error
 	HasBucket(bucket string) bool
+	HasKey(bucket, key string) bool
 
 	/* NOT USED
 	 * delete a bucket, if not exist, do nothing

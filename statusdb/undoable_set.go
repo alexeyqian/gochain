@@ -1,21 +1,24 @@
 package statusdb
 
 import (
+	"github.com/alexeyqian/gochain/utils"
+	"fmt"
 	"github.com/alexeyqian/gochain/entity"
 )
 
-type UndoState struct{	
-	Revision uint32
-	NewIDs []string
-	RemovedValues map[string][]byte
-	OldValues map[string][]byte	
-}
-
 type UndoableSet struct{
 	storage *Storage
-	name string
-	elementType string
-	revision uint32	
+	dataBucket string
+	stateBucket string	
+	latestRevision uint32
+	count uint32
+}
+
+type UndoState struct{	
+	revision uint32
+	newIDs []string
+	removedValues map[string][]byte
+	oldValues map[string][]byte	
 }
 
 func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
@@ -25,92 +28,199 @@ func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
 
 	us := UndoableSet{
 		storage: s,
-		name: name,
-		elementType: elementType,
-		revision: 0,
+		dataBucket: name + "_data",
+		stateBucket: name + "_state",
+		latestRevision: 0,
+		count: 0,
 	}
 
-	// create data set and data state set
-	s.CreateSet(name, entityType)
-	s.CreateSet(name + "_state", "UndoState")
+	// create data bucket and state bucket
+	err := s.CreateBucket(us.dataBucket)
+	if err != nil{
+		return nil, err
+	}
+	err = s.CreateBucket(us.stateBucket)
+	if err != nil{
+		return nil, err
+	}
 
 	return &us, nil
 }
 
 func (us *UndoableSet) Create(key string, data []byte) error{	
 	if key == "" {
-		return fmt.Errorf("entity must have ID.")
+		return fmt.Errorf("create: entity must have ID.")
+	}
+	
+	if us.storage.HasKey(us.dataBucket, key) {
+		return fmt.Errorf("create: entity already exist.")
 	}
 
-	err := storage.Put(entity.GetID(e), e)
-	if err != nil{ // sth like duplicated id
-		return err
-	}
-
-	us.onCreate(entity)
-
-	return nil
-}
-
-func (us *UndoableSet) Update(e Entity) error{
-	if !entity.HasID(e) {
-		return fmt.Errorf("entity must have ID.")
-	}
-
-	existing, err := entityTable.Find(e.ID)
+	// 1. update state bucket
+	err := us.onCreate(key)
 	if err != nil{
 		return err
 	}
 
-	us.onModify(existing)
+	// 2. save to data bucket
+	err = us.storage.Put(us.dataBucket, key, data)
+	if err != nil{ 
+		return err
+	}
 
-	//e.UpdatedAt = time.Now().Unix()
-	storage.Put(entity.GetID(e), e)
+	us.count++
+	return nil
+}
+
+func (us *UndoableSet) onCreate(key string) error{
+	if !us.hasSession() { 
+		return nil
+	}
+
+	state := us.latestState()
+	state.newIDs = append(state.newIDs, key)
+	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
 
 	return nil
 }
 
-func (us *UndoableSet) Remove(id string) error{
-	if id == ""{
-		return fmt.Errorf("id cannot be empty")
+func (us *UndoableSet) Update(key string, data []byte) error{
+	if key == "" {
+		return fmt.Errorf("update: must have ID.")
+	}
+	if !us.storage.HasKey(us.dataBucket, key) {
+		return fmt.Errorf("update: key not exist.")
 	}
 
-	existing, err := entityTable.Find(id)
+	existing, err := us.storage.Get(us.dataBucket, key)
+	if err != nil{
+		return err
+	}
+	// 1. update state bucket
+	err = us.onUpdate(key, existing)
+	if err != nil{
+		return err
+	}
+
+	// 2. udpate data bucket
+	return us.storage.Put(us.dataBucket, key, data)	
+}
+
+func (us *UndoableSet) onUpdate(key string, existing []byte) error{
+	if !us.hasSession() { 
+		return
+	}
+
+	state := us.latestState()
+
+	_, found := utils.FindString(state.newIDs, key)
+	if found {
+		return nil// do nothing if it's new added
+	}
+
+	_, ok := state.oldValues[key]
+	if ok{
+		return nil // do nothing if old value already exists
+	}
+
+	_, ok = state.removedValues[key]
+	if ok{
+		panic("cannot modify deleted entity")
+	}
+
+	state.oldValues[key] = existing
+	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
+	
+	return nil
+}
+
+
+func (us *UndoableSet) Delete(key string) error{
+	if key == ""{
+		return fmt.Errorf("delete: id cannot be empty")
+	}
+	if !us.storage.HasKey(us.dataBucket, key) {
+		return fmt.Errorf("delete: key not exist.")
+	}
+
+	existing, err := us.storage.Get(us.dataBucket, id)
 	if err != nil{
 		return err
 	}
 	
-	us.onRemove(existing)
+	// 1. udpate state bucket
+	err = us.onDelete(key, existing)
+	if err != nil{
+		return err
+	}
 
-	Storage.Remove(addPrefix(id))
+	// 2. update data bucket
+	err = us.storage.Delete(us.dataBucket, id)	
+	if err != nil{
+		return err
+	}
 
-	return nil
+	us.count--
 }
 
-func (us *UndoableSet) Find(id string) (Entity, error){
-	return entityTable.Find(id)
+
+func onDelete(key string, existing []byte) error {
+	if !us.hasSession() { 
+		return nil
+	}
+
+	state := us.latestState()
+
+	// if the removed on is new added, just remove it from new id list
+	i, found := utils.FindString(state.newIDs, key)
+	if found{
+		// remove key from newIDs
+		state.newIDs = append(state.newIDs[:i], state.newIDs[i+1:]...)
+		return nil
+	}
+
+	// if the removed on is updated
+	// add it to removed list
+	// remove it from old value list
+	_, ok := state.oldValues[key]
+	if ok {
+		delete(state.oldValues, key)
+		state.removedValues[key] = existing
+	}
+		
+	// if the removed one is already removed
+	_, ok = state.removedValues[key]
+	if ok {
+		return nil
+	}
+
+	state.RemoveValues[key] = existing
+	
+	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
 }
 
-func (us *UndoableSet) Latest() (Entity, error){
-	return entityTable.Latest()
+func (us *UndoableSet) Get(key string) ([]byte, error){
+	return us.storage.Get(us.dataBucket, key)
 }
 
 func (us *UndoableSet) Size() int{
-	return entityTable.Size()
+	return us.count
 }
 
 func (us *UndoableSet) StartUndoSession(){
 	var state UndoState
-	state.Revision = ++us.Revision
-	us.StateList = append(u.StateList, state)
+	state.revision = us.latestRevision + 1
+	us.storage.Put(us.stateBucket, state.revision, utils.SerializeEntity(state))
 }
 
 func (us *UndoableSet) CommitFromLastSession(){
-	if len(us.StateList) <= 0{
+	if !us.hasSession() {
 		return
 	}
-	// remove the first element
-	us.StateList = us.StateList[1:]
+
+	lastState := us.latestState()
+	// remove the latest element
+	us.storage.Delete(name+"state", lastState.revision)
 }
 
 func (us *UndoableSet) UndoChangesFromLastSession(){
@@ -121,91 +231,36 @@ func (us *UndoableSet) UndoChangesFromLastSession(){
 	head := us.latestState()
 
 	// undo modifications
-	for _, item := range head.OldValues{
+	for _, item := range head.oldValues{
 		// restore old values to database
 	}
 
 	// undo creations
-	for _, item := range head.NewIDs{
+	for _, item := range head.newIDs{
 		// remove new created entity from database
 	}
 
 	// undo deletions
-	for  _, item := range head.RemovedValues{
+	for  _, item := range head.removedValues{
 		// restore removed values to database
 	}
 
 	us.entityStateTable.Pop() // remove latest
-	--us.Revision
-}
-
-
-func (us *UndoableSet) onCreate(e *Entity){
-	if !us.hasSession() { 
-		return
-	}
-
-	state := us.latestState()
-	state.NewIDs := append(state.NewIDs, e.ID)
-
-}
-
-func onRemove(e *Entity) {
-	if !us.hasSession() { 
-		return
-	}
-
-	state := us.latestState()
-
-	// if the removed on is new added since last session
-	// just remove it from new id list
-	if state.NewIDs.Contains(e.ID){
-		state.NewIDs.Remove(e.ID)
-		return
-	}
-
-	// 2. if the removed on is updated one
-	// add it to removed list
-	// remove it from old value list
-	if oldValues.Contains(e.ID) {
-		oldValues.Remove(e.ID)
-		removedValues.Add(e)
-	}
-		
-	// if the removed one is already removed
-	if removedValues.Contains(e){
-		return
-	}
-
-	state.RemoveValues.Add(e)	
-}
-
-func (us *UndoableSet) onModify(e Entity){
-	if !us.hasSession() { 
-		return
-	}
-
-	head := us.latestState()
-	if head.NewIDs.contains(e.ID) {
-		return // do nothing if it's new added
-	}
-	if head.OldValues.contains(e.ID){
-		return  // do nothing if old value already exists
-	}
-
-	if head.RemovedValues.contains(e.ID){
-		panic("cannot modify deleted entity")
-	}
-
-	head.OldValues.add(e)
+	--us.revision
 }
 
 // helpers
 func (us *UndoableSet) hasSession() bool{
-	return len(us.entityStateTable) > 0
+	return us.latestRevision > 0
 }
 
-// TODO: rename to head()
 func (us *UndoableSet) latestState() *UndoState{
-	return &us.entityStateTable[len(us.entityStateTable) - 1]
+	data, err := us.storage.Get(us.stateBucket, us.latestRevision)
+	if err != nil{
+		panic("undoable set: cannot get latest state")
+	}
+
+	var state UndoState
+	entity.DeserializeEntity(&state, data)
+	return &state
 }
