@@ -5,8 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/alexeyqian/gochain/config"
-
 	"github.com/boltdb/bolt"
 )
 
@@ -21,7 +19,7 @@ func NewBoltStorage(path string) *BoltStorage {
 	}
 }
 
-func (s *BoltStorage) Open() {
+func (s *BoltStorage) Open() error {
 	var err error
 
 	// Open the my.db data file in your current directory.
@@ -33,29 +31,36 @@ func (s *BoltStorage) Open() {
 	if err != nil {
 		panic(err)
 	}
+
+	return nil
 }
 
-func (s *BoltStorage) Close() {
+func (s *BoltStorage) Close() error {
 	s.db.Close()
+	return nil
 }
 
-func (s *BoltStorage) RemoveAll() {
-	os.Remove(config.BoltDbFileName)
+func (s *BoltStorage) Remove() error {
+	os.Remove(s.pathname)
+	return nil
 }
 
 func (s *BoltStorage) Get(bucket, key string) ([]byte, error) {
-	err = s.db.View(func(tx *bolt.Tx) error {
+	var temp []byte
+
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return nil, fmt.Errorf("bucket: %s not exist", bucket)
+			return fmt.Errorf("bucket: %s not exist", bucket)
 		}
+
 		data := b.Get([]byte(key))
 		temp = make([]byte, len(data))
 		// @attention Have to duplicate the data out, it will invalid out tx
 		copy(temp, data)
-		return temp, err
+		return nil
 	})
-	return result, err
+	return temp, err
 }
 
 func (s *BoltStorage) Put(bucket, key string, data []byte) error {
@@ -73,15 +78,14 @@ func (s *BoltStorage) Put(bucket, key string, data []byte) error {
 	return err
 }
 
-func (s *BoldStorage) Delete(bucket, key string) error {
+func (s *BoltStorage) Delete(bucket, key string) error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil // no bucket, do nothing
 		}
 
-		err := b.Delete([]byte(key))
-		return err
+		return b.Delete([]byte(key))
 	})
 
 	return err
@@ -99,99 +103,55 @@ func (s *BoltStorage) GetAll(bucket string) ([][]byte, error) {
 			temp = make([]byte, len(v))
 			// @attention Have to duplicate v out, which will be invalid out side of tx
 			copy(temp, v)
-			res = append(res, e)
+			res = append(res, temp)
 		}
 
-		return err
+		return nil
 	})
 
 	return res, err
 }
 
 func (s *BoltStorage) HasBucket(bucket string) bool {
-	return s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
-		return b != nil
+		if b != nil {
+			return nil
+		} else {
+			return fmt.Errorf("not exist")
+		}
 	})
+
+	return err == nil
 }
 
-func (s *BoltStorage) CreateBucket(bucket) error {
+func (s *BoltStorage) HasKey(bucket, key string) bool {
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return fmt.Errorf("bucket: %s not exist", bucket)
+		}
+
+		data := b.Get([]byte(key))
+		if data == nil {
+			return fmt.Errorf("cannot find key")
+		}
+
+		return nil
+	})
+
+	return err == nil
+}
+
+func (s *BoltStorage) CreateBucket(bucket string) error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			tx.CreateBucket([]byte(bucket))
 		}
 
-		return err
+		return nil
 	})
 
 	return err
 }
-
-/*
-func serializeEntity(bucket string, e entity.Entity) ([]byte, error) {
-	var err error
-	var result bytes.Buffer
-	encoder := gob.NewEncoder(&result)
-
-	switch bucket {
-	case GpoTable:
-		ce := e.(entity.Gpo)
-		err = encoder.Encode(ce)
-		return result.Bytes(), err
-	case AccountTable:
-		ce := e.(entity.Account)
-		err = encoder.Encode(ce)
-		return result.Bytes(), err
-	case ArticleTable:
-		ce := e.(entity.Article)
-		err = encoder.Encode(ce)
-		return result.Bytes(), err
-	case CommentTable:
-		ce := e.(entity.Comment)
-		err = encoder.Encode(ce)
-		return result.Bytes(), err
-	case VoteTable:
-		ce := e.(entity.Vote)
-		err = encoder.Encode(ce)
-		return result.Bytes(), err
-	}
-
-	panic("serialize: unknown entity type")
-}
-
-func deserializeEntity(bucket string, data []byte) (entity.Entity, error) {
-	var err error
-	decoder := gob.NewDecoder(bytes.NewReader(data))
-
-	switch bucket {
-	case GpoTable:
-		var e entity.Gpo
-		err = decoder.Decode(&e)
-		return e, err
-	case AccountTable:
-		var e entity.Account
-		err = decoder.Decode(&e)
-		return e, err
-	case ArticleTable:
-		var e entity.Article
-		err = decoder.Decode(&e)
-		return e, err
-	case CommentTable:
-		var e entity.Comment
-		err = decoder.Decode(&e)
-		return e, err
-	case VoteTable:
-		var e entity.Vote
-		err = decoder.Decode(&e)
-		return e, err
-	}
-
-	panic("deserialize: unknown entity type")
-}
-
-func getPrefix(key string) string {
-	index := bytes.Index([]byte(key), []byte("_"))
-	return key[0:index]
-}
-*/

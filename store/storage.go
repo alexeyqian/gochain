@@ -2,9 +2,9 @@ package store
 
 // Simple key/value storage interface
 type Storage interface {
-	Open()
-	Close()
-	RemoveAll()
+	Open() error
+	Close() error
+	Remove() error
 
 	// Get all items from bucket
 	GetAll(bucket string) ([][]byte, error)

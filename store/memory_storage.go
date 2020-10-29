@@ -1,5 +1,6 @@
 package store
 
+/*
 import (
 	"fmt"
 )
@@ -29,7 +30,7 @@ func (s *MemoryStorage) Open() {
 func (s *MemoryStorage) Close() {
 }
 
-func (s *MemoryStorage) RemoveAll() {
+func (s *MemoryStorage) Remove() {
 	s.buckets = nil
 }
 
@@ -39,8 +40,8 @@ func (s *MemoryStorage) GetAll(bucket string) ([][]byte, error) {
 	}
 
 	var res [][]byte
-	for _, value := range s.buckets[bucket] {
-		res = append(res, value)
+	for _, pair := range s.buckets[bucket].Pairs {
+		res = append(res, pair.Data)
 	}
 	return res, nil
 }
@@ -65,3 +66,9 @@ func (s *MemoryStorage) HasBucket(bucket string) bool {
 	_, ok := s.buckets[bucket]
 	return ok
 }
+
+func (s *MemoryStorage) CreateBucket(bucket string) error {
+	//s.buckets[bucket] =
+	return nil
+}
+*/

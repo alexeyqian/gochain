@@ -1,50 +1,72 @@
 package undodb
 
-import "fmt"
+import (
+	"fmt"
 
-type RevisionRow struct {
-	revision  uint32
+	"github.com/alexeyqian/gochain/store"
+)
+
+type Revision struct {
+	num       uint32
 	table     string
 	operation string
 	key       string
 	data      []byte
 }
 
-type RevistionTable struct {
-	rows []RevisionRow
-}
-
 type UndoableDB struct {
-	storage        *Storage
-	revisionTable  *RevistionTable
-	dataBucket     string
-	stateBucket    string
-	latestRevision uint32
-	count          uint32
+	store store.Storage
 }
 
-func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error) {
-	if s.HasBucket(name) {
-		return nil, fmt.Errorf("cannot create same set in storage")
+// these two table names are reserved by database
+// user should not be able to create same table name
+const metaTable = "_meta_"
+const revisionTable = "_revision_"
+
+func NewUndoableDB(storage store.Storage) *UndoableDB {
+
+	udb := UndoableDB{
+		store: storage,
 	}
 
-	us := UndoableSet{
-		storage:        s,
-		dataBucket:     name + "_data",
-		stateBucket:    name + "_state",
-		latestRevision: 0,
-		count:          0,
-	}
+	return &udb
+}
 
-	// create data bucket and state bucket
-	err := s.CreateBucket(us.dataBucket)
+func (udb *UndoableDB) Open() error {
+	err := udb.store.Open()
 	if err != nil {
-		return nil, err
-	}
-	err = s.CreateBucket(us.stateBucket)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &us, nil
+	if !udb.store.HasBucket(metaTable) {
+		// create data bucket and state bucket
+		err := udb.store.CreateBucket(metaTable)
+		if err != nil {
+			return err
+		}
+		err = udb.store.CreateBucket(revisionTable)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (udb *UndoableDB) Close() error {
+	return udb.store.Close()
+}
+
+func (udb *UndoableDB) Remove() error {
+	return udb.store.Remove()
+}
+
+func (udb *UndoableDB) HasTable(name string) bool {
+	return udb.store.HasBucket(name)
+}
+
+func (udb *UndoableDB) CreateTable(name string) error {
+	if name == metaTable || name == revisionTable {
+		return fmt.Errorf("cannot use internal names")
+	}
+	return udb.store.CreateBucket(name)
 }
