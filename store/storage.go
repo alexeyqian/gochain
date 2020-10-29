@@ -1,4 +1,4 @@
-package statusdb
+package store
 
 // Simple key/value storage interface
 type Storage interface {

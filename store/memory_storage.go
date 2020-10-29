@@ -1,4 +1,4 @@
-package statusdb
+package store
 
 import (
 	"fmt"
