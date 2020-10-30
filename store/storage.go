@@ -1,5 +1,7 @@
 package store
 
+import "encoding/binary"
+
 // will instruct the storage to create an auto increment key
 const AutoIncrementKey = "_auto_increment_key_"
 
@@ -49,4 +51,24 @@ type Storage interface {
 	 * delete a bucket, if not exist, do nothing
 	 */
 	//DeleteBucket(bucket string) error
+}
+
+func IntKeyToBytes(key uint64) []byte {
+	b := make([]byte, 8)
+	if IsIntKeyEncodedInBigEndian {
+		binary.BigEndian.PutUint64(b, key)
+	} else {
+		binary.LittleEndian.PutUint64(b, key)
+	}
+	return b
+}
+
+func BytesToIntKey(data []byte) uint64 {
+	var key uint64
+	if IsIntKeyEncodedInBigEndian {
+		key = binary.BigEndian.Uint64(data)
+	} else {
+		key = binary.LittleEndian.Uint64(data)
+	}
+	return key
 }
