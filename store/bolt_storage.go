@@ -77,12 +77,16 @@ func (s *BoltStorage) Put(bucket string, key []byte, data []byte) error {
 
 		if key == nil || string(key) == AutoIncrementKey {
 			id, _ := b.NextSequence() // return uint64, error
+			//fmt.Printf("next sequence: %d\n", id)
 			b := make([]byte, 8)
 			if IsIntKeyEncodedInBigEndian {
 				binary.BigEndian.PutUint64(b, id)
 			} else {
 				binary.LittleEndian.PutUint64(b, id)
 			}
+			// double check if the int to []byte is correct
+			//checkkey := binary.BigEndian.Uint64(b)
+			//fmt.Printf("double check next sequnce: %d\n", checkkey)
 
 			key = b
 		}
@@ -122,8 +126,9 @@ func (s *BoltStorage) GetAll(bucket string) ([]KeyValuePair, error) {
 			tempK = make([]byte, len(k))
 			tempV = make([]byte, len(v))
 			// @attention Have to duplicate v out, which will be invalid out side of tx
-			copy(tempK, v)
+			copy(tempK, k)
 			copy(tempV, v)
+
 			res = append(res, KeyValuePair{Key: tempK, Value: tempV})
 		}
 

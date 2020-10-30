@@ -59,10 +59,10 @@ func (udb *UndoableDB) HasKey(table, key string) bool {
 		return false
 	}
 
-	return udb.store.HasKey(table, key)
+	return udb.store.HasKey(table, []byte(key))
 }
 
 // GetInt // table is using auto increment id as key
 func (udb *UndoableDB) Get(table, key string) ([]byte, error) {
-	return udb.store.Get(table, key)
+	return udb.store.Get(table, []byte(key))
 }

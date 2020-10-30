@@ -11,20 +11,20 @@ import (
 
 /*
 TODO: limit operations in revision to 256
-limit revision num to 256
+limit revision Num to 256
 so max undoable operation is 256 x 256, which is good enough
 */
 
 type Revision struct {
-	num       uint32
-	table     string
-	operation string
-	key       string
-	data      []byte
+	Num       uint32
+	Table     string
+	Operation string
+	Key       string
+	Data      []byte
 }
 
 func (udb *UndoableDB) StartUndoSession() uint32 {
-	// @future validate max revision num to see if can process further
+	// @future validate max revision Num to see if can process further
 
 	meta := udb.getMetaData()
 	meta.Revision++
@@ -39,7 +39,7 @@ func (udb *UndoableDB) UndoLastSession() {
 	}
 
 	rawRevisions, _ := udb.store.GetAll(revisionTable)
-	var revisions map[uint64]Revision
+	revisions := make(map[uint64]Revision, len(rawRevisions))
 	for _, v := range rawRevisions {
 		var key uint64
 		if store.IsIntKeyEncodedInBigEndian {
@@ -76,7 +76,8 @@ func (udb *UndoableDB) getCurrentRevision() uint32 {
 }
 
 func (udb *UndoableDB) undoOperation(op Revision) {
-	if op.operation == "create" {
-		udb.store.Delete(op.table, []byte(op.key))
+	if op.Operation == "create" {
+		udb.store.Delete(op.Table, []byte(op.Key))
+		//fmt.Printf("undo operation: %+v\n", op)
 	}
 }

@@ -43,13 +43,13 @@ func (udb *UndoableDB) onCreate(table, key string) error {
 		return nil
 	}
 	revision := Revision{
-		num:       num,
-		table:     table,
-		operation: "create",
-		key:       key,
+		Num:       num,
+		Table:     table,
+		Operation: "create",
+		Key:       key,
 	}
 
 	err := udb.store.Put(revisionTable, nil, entity.Serialize(revision))
-
+	//fmt.Printf("create undo operation: %+v\n", revision)
 	return err
 }
