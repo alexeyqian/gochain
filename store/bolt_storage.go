@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/binary"
 	"fmt"
 	"os"
 	"time"
@@ -45,7 +46,7 @@ func (s *BoltStorage) Remove() error {
 	return nil
 }
 
-func (s *BoltStorage) Get(bucket, key string) ([]byte, error) {
+func (s *BoltStorage) Get(bucket string, key []byte) ([]byte, error) {
 	var temp []byte
 
 	err := s.db.View(func(tx *bolt.Tx) error {
@@ -54,7 +55,7 @@ func (s *BoltStorage) Get(bucket, key string) ([]byte, error) {
 			return fmt.Errorf("bucket: %s not exist", bucket)
 		}
 
-		data := b.Get([]byte(key))
+		data := b.Get(key)
 		temp = make([]byte, len(data))
 		// @attention Have to duplicate the data out, it will invalid out tx
 		copy(temp, data)
@@ -63,14 +64,30 @@ func (s *BoltStorage) Get(bucket, key string) ([]byte, error) {
 	return temp, err
 }
 
-func (s *BoltStorage) Put(bucket, key string, data []byte) error {
+func (s *BoltStorage) Put(bucket string, key []byte, data []byte) error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			tx.CreateBucket([]byte(bucket))
+			_, err := tx.CreateBucket([]byte(bucket))
+			if err != nil {
+				return err
+			}
+			b = tx.Bucket([]byte(bucket)) // re-pointing to new created table
 		}
 
-		err := b.Put([]byte(key), data)
+		if key == nil || string(key) == AutoIncrementKey {
+			id, _ := b.NextSequence() // return uint64, error
+			b := make([]byte, 8)
+			if IsIntKeyEncodedInBigEndian {
+				binary.BigEndian.PutUint64(b, id)
+			} else {
+				binary.LittleEndian.PutUint64(b, id)
+			}
+
+			key = b
+		}
+
+		err := b.Put(key, data)
 
 		return err
 	})
@@ -78,38 +95,60 @@ func (s *BoltStorage) Put(bucket, key string, data []byte) error {
 	return err
 }
 
-func (s *BoltStorage) Delete(bucket, key string) error {
+func (s *BoltStorage) Delete(bucket string, key []byte) error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil // no bucket, do nothing
 		}
 
-		return b.Delete([]byte(key))
+		return b.Delete(key)
 	})
 
 	return err
 }
 
-func (s *BoltStorage) GetAll(bucket string) ([][]byte, error) {
-	var temp []byte
-	var res [][]byte
+// TODO: return bytes, count, and error?
+func (s *BoltStorage) GetAll(bucket string) ([]KeyValuePair, error) {
+	var tempK []byte
+	var tempV []byte
+	var res []KeyValuePair
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			temp = make([]byte, len(v))
+			tempK = make([]byte, len(k))
+			tempV = make([]byte, len(v))
 			// @attention Have to duplicate v out, which will be invalid out side of tx
-			copy(temp, v)
-			res = append(res, temp)
+			copy(tempK, v)
+			copy(tempV, v)
+			res = append(res, KeyValuePair{Key: tempK, Value: tempV})
 		}
 
 		return nil
 	})
 
 	return res, err
+}
+
+func (s *BoltStorage) HasKey(bucket string, key []byte) bool {
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return fmt.Errorf("bucket: %s not exist", bucket)
+		}
+
+		data := b.Get(key)
+		if data == nil {
+			return fmt.Errorf("cannot find key")
+		}
+
+		return nil
+	})
+
+	return err == nil
 }
 
 func (s *BoltStorage) HasBucket(bucket string) bool {
@@ -120,24 +159,6 @@ func (s *BoltStorage) HasBucket(bucket string) bool {
 		} else {
 			return fmt.Errorf("not exist")
 		}
-	})
-
-	return err == nil
-}
-
-func (s *BoltStorage) HasKey(bucket, key string) bool {
-	err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
-		if b == nil {
-			return fmt.Errorf("bucket: %s not exist", bucket)
-		}
-
-		data := b.Get([]byte(key))
-		if data == nil {
-			return fmt.Errorf("cannot find key")
-		}
-
-		return nil
 	})
 
 	return err == nil

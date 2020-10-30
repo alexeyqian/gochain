@@ -1,5 +1,17 @@
 package store
 
+// will instruct the storage to create an auto increment key
+const AutoIncrementKey = "_auto_increment_key_"
+
+// @IMPORTANT: if change the endian, then add keys will be incorrect
+// has to be big endian now, other wise the bit order sort of the bolt storage might not working
+const IsIntKeyEncodedInBigEndian = true
+
+type KeyValuePair struct {
+	Key   []byte
+	Value []byte
+}
+
 // Simple key/value storage interface
 type Storage interface {
 	Open() error
@@ -7,29 +19,30 @@ type Storage interface {
 	Remove() error
 
 	// Get all items from bucket
-	GetAll(bucket string) ([][]byte, error)
+	GetAll(bucket string) ([]KeyValuePair, error)
 
 	/*
 	 * return error if buket or key is not found
 	 */
-	Get(bucket, key string) ([]byte, error)
+	Get(bucket string, key []byte) ([]byte, error)
 
 	/*
 	 * if buket is not exist, create a new bucket
 	 * if key not exist, create new key and value pair
 	 * if key is already exist, replace the old value
+	 * @attention: if key is nil or equals "AutoIncrementedId", then using auto-increment id as key
 	 */
-	Put(bucket, key string, data []byte) error
+	Put(bucket string, key []byte, data []byte) error
 
 	/*
 	 * delete key/value pairs, if buket or key not exist, just do nothing
 	 */
-	Delete(bucket, key string) error
+	Delete(bucket string, key []byte) error
+
+	HasKey(bucket string, key []byte) bool
 
 	CreateBucket(bucket string) error
-
 	HasBucket(bucket string) bool
-	HasKey(bucket, key string) bool
 	RowCount(bucket string) int
 
 	/* NOT USED
