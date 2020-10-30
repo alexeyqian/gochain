@@ -10,11 +10,11 @@ import (
 )
 
 type Book struct {
-	ID           string
-	Title        string
-	Author       string
-	PublishedYer int
-	Price        float32
+	ID            string
+	Title         string
+	Author        string
+	PublishedYear int
+	Price         float32
 }
 
 // func test db reopen
@@ -35,11 +35,11 @@ func TestSessionUndo(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		book := Book{
-			ID:           fmt.Sprintf("id_%d", i),
-			Title:        fmt.Sprintf("title_%d", i),
-			Author:       fmt.Sprintf("author_%d", i),
-			PublishedYer: 1980 + i,
-			Price:        100.00 + float32(i),
+			ID:            fmt.Sprintf("id_%d", i),
+			Title:         fmt.Sprintf("title_%d", i),
+			Author:        fmt.Sprintf("author_%d", i),
+			PublishedYear: 1980 + i,
+			Price:         100.00 + float32(i),
 		}
 
 		udb.Create(table, book.ID, entity.Serialize(book))
@@ -77,11 +77,11 @@ func TestSessionUndoExtra(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		book := Book{
-			ID:           fmt.Sprintf("id_%d", i),
-			Title:        fmt.Sprintf("title_%d", i),
-			Author:       fmt.Sprintf("author_%d", i),
-			PublishedYer: 1980 + i,
-			Price:        100.00 + float32(i),
+			ID:            fmt.Sprintf("id_%d", i),
+			Title:         fmt.Sprintf("title_%d", i),
+			Author:        fmt.Sprintf("author_%d", i),
+			PublishedYear: 1980 + i,
+			Price:         100.00 + float32(i),
 		}
 
 		udb.Create(table, book.ID, entity.Serialize(book))
@@ -97,7 +97,56 @@ func TestSessionUndoExtra(t *testing.T) {
 		t.Errorf("row count expected: %d, actual: %d", 10, rowCount)
 	}
 
+	{
+		// update book1
+		id := fmt.Sprintf("id_%d", 1)
+		var book Book
+		data, _ := udb.Get(table, id)
+		entity.Deserialize(&book, data)
+		book.Title = "updated title"
+		book.PublishedYear = 2000
+		book.Price = 205.00
+
+		udb.Update(table, book.ID, entity.Serialize(book))
+
+		var bookUpdated Book
+		data, _ = udb.Get(table, id)
+		entity.Deserialize(&bookUpdated, data)
+
+		if bookUpdated.Title != book.Title || bookUpdated.Price != book.Price {
+			t.Errorf("book update failed")
+		}
+
+		// delete book2
+		id = fmt.Sprintf("id_%d", 2)
+		udb.Delete(table, id)
+		_, err := udb.Get(table, id)
+		if err == nil {
+			t.Errorf("delete failed")
+		}
+	}
+
 	udb.UndoLastSession()
+
+	{
+		// verify undo book1
+		id := fmt.Sprintf("id_%d", 1)
+		var book Book
+		data, _ := udb.Get(table, id)
+		entity.Deserialize(&book, data)
+		//fmt.Printf("undo book: %+v\n", book)
+		if book.Title != fmt.Sprintf("title_%d", 1) || book.PublishedYear != 1981 {
+			t.Errorf("undo book update failed")
+		}
+
+		// verify undo deleted book2
+		id = fmt.Sprintf("id_%d", 2)
+		_, err := udb.Get(table, id)
+		if err != nil {
+			t.Errorf("undo delete failed")
+		}
+
+	}
 
 	revision = udb.getCurrentRevision()
 	if revision != 0 {
@@ -105,8 +154,8 @@ func TestSessionUndoExtra(t *testing.T) {
 	}
 
 	rowCount = udb.RowCount(table)
-	if rowCount != 0 {
-		t.Errorf("row count expected: %d, actual: %d", 0, rowCount)
+	if rowCount != 10 {
+		t.Errorf("row count expected: %d, actual: %d", 10, rowCount)
 	}
 
 	udb.Close()
@@ -131,11 +180,11 @@ func TestSessionCommit(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		book := Book{
-			ID:           fmt.Sprintf("id_%d", i),
-			Title:        fmt.Sprintf("title_%d", i),
-			Author:       fmt.Sprintf("author_%d", i),
-			PublishedYer: 1980 + i,
-			Price:        100.00 + float32(i),
+			ID:            fmt.Sprintf("id_%d", i),
+			Title:         fmt.Sprintf("title_%d", i),
+			Author:        fmt.Sprintf("author_%d", i),
+			PublishedYear: 1980 + i,
+			Price:         100.00 + float32(i),
 		}
 
 		udb.Create(table, book.ID, entity.Serialize(book))

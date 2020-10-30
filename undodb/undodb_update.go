@@ -21,7 +21,8 @@ func (udb *UndoableDB) Update(table, key string, data []byte) error {
 	// TODO: need a transaction here // TRANSACTION HERE
 	// TODO: store.BatchInTransaction(operations)
 	// 1. update revision table
-	err := udb.onUpdate(table, key, data)
+	olddata, _ := udb.Get(table, key)
+	err := udb.onUpdate(table, key, olddata)
 	if err != nil {
 		return err
 	}

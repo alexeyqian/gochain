@@ -76,9 +76,16 @@ func (udb *UndoableDB) getCurrentRevision() uint32 {
 }
 
 func (udb *UndoableDB) undoOperation(op Revision) {
-	if op.Operation == "create" {
+	switch op.Operation {
+	case "create":
 		udb.store.Delete(op.Table, []byte(op.Key))
 		//fmt.Printf("undo operation: %+v\n", op)
+	case "update":
+		udb.store.Put(op.Table, []byte(op.Key), op.Data)
+	case "delete":
+		udb.store.Put(op.Table, []byte(op.Key), op.Data)
+	default:
+		panic("unknown operation")
 	}
 }
 

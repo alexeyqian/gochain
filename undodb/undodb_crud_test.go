@@ -38,11 +38,11 @@ func TestCreate(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		book := Book{
-			ID:           fmt.Sprintf("id_%d", i),
-			Title:        fmt.Sprintf("title_%d", i),
-			Author:       fmt.Sprintf("author_%d", i),
-			PublishedYer: 1980 + i,
-			Price:        100.00 + float32(i),
+			ID:            fmt.Sprintf("id_%d", i),
+			Title:         fmt.Sprintf("title_%d", i),
+			Author:        fmt.Sprintf("author_%d", i),
+			PublishedYear: 1980 + i,
+			Price:         100.00 + float32(i),
 		}
 
 		err = udb.Create(table, book.ID, entity.Serialize(book))
@@ -81,7 +81,7 @@ func TestCreate(t *testing.T) {
 		data, _ := udb.Get(table, id)
 		entity.Deserialize(&book, data)
 		book.Title = "updated title"
-		book.PublishedYer = 2000
+		book.PublishedYear = 2000
 		book.Price = 205.00
 
 		udb.Update(table, book.ID, entity.Serialize(book))
@@ -105,7 +105,7 @@ func TestCreate(t *testing.T) {
 		}
 
 		count := udb.RowCount(table)
-		fmt.Printf("row count: %d\n", count)
+		//fmt.Printf("row count: %d\n", count)
 		if count != 9 {
 			t.Errorf("[delete] expected: %d, actual: %d", 9, count)
 		}
