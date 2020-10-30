@@ -2,8 +2,6 @@ package undodb
 
 import (
 	"fmt"
-
-	"github.com/alexeyqian/gochain/entity"
 )
 
 func (udb *UndoableDB) Create(table, key string, data []byte) error {
@@ -38,18 +36,5 @@ func (udb *UndoableDB) Create(table, key string, data []byte) error {
 }
 
 func (udb *UndoableDB) onCreate(table, key string) error {
-	num := udb.getCurrentRevision()
-	if num == 0 { // no undo session
-		return nil
-	}
-	revision := Revision{
-		Num:       num,
-		Table:     table,
-		Operation: "create",
-		Key:       key,
-	}
-
-	err := udb.store.Put(revisionTable, nil, entity.Serialize(revision))
-	//fmt.Printf("create undo operation: %+v\n", revision)
-	return err
+	return udb.saveRevision(table, key, nil, "create")
 }

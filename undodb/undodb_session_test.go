@@ -66,6 +66,53 @@ func TestSessionUndo(t *testing.T) {
 	udb.Remove()
 }
 
+func TestSessionUndoExtra(t *testing.T) {
+	pathname := "test.db"
+	storage := store.NewBoltStorage(pathname)
+	udb := NewUndoableDB(storage)
+
+	udb.Open()
+	table := "book"
+	udb.CreateTable(table)
+
+	for i := 0; i < 10; i++ {
+		book := Book{
+			ID:           fmt.Sprintf("id_%d", i),
+			Title:        fmt.Sprintf("title_%d", i),
+			Author:       fmt.Sprintf("author_%d", i),
+			PublishedYer: 1980 + i,
+			Price:        100.00 + float32(i),
+		}
+
+		udb.Create(table, book.ID, entity.Serialize(book))
+	}
+
+	revision := udb.StartUndoSession()
+	if revision != 1 {
+		t.Errorf("revision expected: %d, actual: %d", 1, revision)
+	}
+
+	rowCount := udb.RowCount(table)
+	if rowCount != 10 {
+		t.Errorf("row count expected: %d, actual: %d", 10, rowCount)
+	}
+
+	udb.UndoLastSession()
+
+	revision = udb.getCurrentRevision()
+	if revision != 0 {
+		t.Errorf("revision expected: %d, actual: %d", 0, revision)
+	}
+
+	rowCount = udb.RowCount(table)
+	if rowCount != 0 {
+		t.Errorf("row count expected: %d, actual: %d", 0, rowCount)
+	}
+
+	udb.Close()
+	udb.Remove()
+}
+
 // commit session should empty revision table, and keep all data
 
 func TestSessionCommit(t *testing.T) {

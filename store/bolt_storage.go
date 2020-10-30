@@ -55,6 +55,10 @@ func (s *BoltStorage) Get(bucket string, key []byte) ([]byte, error) {
 		}
 
 		data := b.Get(key)
+		if data == nil {
+			return fmt.Errorf("key not exist")
+		}
+
 		temp = make([]byte, len(data))
 		// @attention Have to duplicate the data out, it will invalid out tx
 		copy(temp, data)

@@ -73,9 +73,43 @@ func TestCreate(t *testing.T) {
 		//fmt.Printf("got book %d is %+v\n", i, book)
 	}
 
+	id := fmt.Sprintf("id_%d", 1)
+
 	// test update
+	{
+		var book Book
+		data, _ := udb.Get(table, id)
+		entity.Deserialize(&book, data)
+		book.Title = "updated title"
+		book.PublishedYer = 2000
+		book.Price = 205.00
+
+		udb.Update(table, book.ID, entity.Serialize(book))
+
+		var bookUpdated Book
+		data, _ = udb.Get(table, id)
+		entity.Deserialize(&bookUpdated, data)
+
+		if bookUpdated.Title != book.Title || bookUpdated.Price != book.Price {
+			t.Errorf("book update failed")
+		}
+		//fmt.Printf("updated book: %+v\n", bookUpdated)
+	}
 
 	// test deletion
+	{
+		udb.Delete(table, id)
+		_, err := udb.Get(table, id)
+		if err == nil {
+			t.Errorf("delete failed")
+		}
+
+		count := udb.RowCount(table)
+		fmt.Printf("row count: %d\n", count)
+		if count != 9 {
+			t.Errorf("[delete] expected: %d, actual: %d", 9, count)
+		}
+	}
 
 	udb.Close()
 	udb.Remove()

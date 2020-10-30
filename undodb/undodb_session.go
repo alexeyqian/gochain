@@ -95,3 +95,22 @@ func (udb *UndoableDB) getAllRevisions(num uint32) map[uint64]Revision {
 	}
 	return revisions
 }
+
+func (udb *UndoableDB) saveRevision(table, key string, data []byte, operation string) error {
+	num := udb.getCurrentRevision()
+	if num == 0 { // no undo session
+		return nil
+	}
+	revision := Revision{
+		Num:       num,
+		Table:     table,
+		Operation: operation,
+		Key:       key,
+		Data:      data,
+	}
+
+	err := udb.store.Put(revisionTable, nil, entity.Serialize(revision))
+	//fmt.Printf("create undo operation: %+v\n", revision)
+	return err
+
+}
