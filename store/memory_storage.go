@@ -41,7 +41,12 @@ func (s *MemoryStorage) Get(bucket string, key []byte) ([]byte, error) {
 	if !s.HasBucket(bucket) {
 		return nil, fmt.Errorf("bucket: %s not exist", bucket)
 	}
-	return s.buckets[bucket][string(key)], nil
+	data, ok := s.buckets[bucket][string(key)]
+	if len(data) > 0 && ok {
+		return data, nil
+	} else {
+		return nil, fmt.Errorf("not found!")
+	}
 }
 
 func (s *MemoryStorage) Put(bucket string, key []byte, data []byte) error {
