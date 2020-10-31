@@ -8,10 +8,15 @@ import (
 	"github.com/alexeyqian/gochain/store"
 )
 
-func TestCreate(t *testing.T) {
+func NewTestDB() *UndoableDB {
 	pathname := "test.db"
-	storage := store.NewBoltStorage(pathname)
+	storage := store.NewMemoryStorage(pathname) //store.NewBoltStorage(pathname)
 	udb := NewUndoableDB(storage)
+	return udb
+}
+
+func TestCreate(t *testing.T) {
+	udb := NewTestDB()
 
 	err := udb.Open()
 	if err != nil {

@@ -1,65 +1,92 @@
 package store
 
-/*
 import (
 	"fmt"
 )
 
-type MemPair struct {
-	Key  string
-	Data []byte
-}
+type MemKey []byte
+type MemValue []byte
+type MemBucket map[string]MemValue
 
-type MemBucket struct {
-	Pairs []MemPair
-}
+// or MmeBucket{[]KeyValuePair}
 
 type MemoryStorage struct {
-	buckets map[string]MemBucket
+	pathname  string // not used
+	buckets   map[string]MemBucket
+	sequences map[string]uint64
 }
 
-func NewMemoryStorage() *MemoryStorage {
+func NewMemoryStorage(name string) *MemoryStorage {
 	return &MemoryStorage{
-		buckets: make(map[string]MemBucket),
+		pathname:  name,
+		buckets:   make(map[string]MemBucket),
+		sequences: make(map[string]uint64),
 	}
 }
 
-func (s *MemoryStorage) Open() {
+func (s *MemoryStorage) Open() error {
+	return nil
 }
 
-func (s *MemoryStorage) Close() {
+func (s *MemoryStorage) Close() error {
+	return nil
 }
 
-func (s *MemoryStorage) Remove() {
+func (s *MemoryStorage) Remove() error {
 	s.buckets = nil
+	return nil
 }
 
-func (s *MemoryStorage) GetAll(bucket string) ([][]byte, error) {
+func (s *MemoryStorage) Get(bucket string, key []byte) ([]byte, error) {
+	if !s.HasBucket(bucket) {
+		return nil, fmt.Errorf("bucket: %s not exist", bucket)
+	}
+	return s.buckets[bucket][string(key)], nil
+}
+
+func (s *MemoryStorage) Put(bucket string, key []byte, data []byte) error {
+	if !s.HasBucket(bucket) {
+		s.buckets[bucket] = make(map[string]MemValue)
+	}
+
+	if key == nil || string(key) == AutoIncrementKey {
+		id := s.NextSequence(bucket) // return uint64, error
+		key = IntKeyToBytes(id)
+	}
+
+	s.buckets[bucket][string(key)] = data
+	return nil
+}
+
+func (s *MemoryStorage) Delete(bucket string, key []byte) error {
+	if !s.HasBucket(bucket) {
+		return nil
+	}
+
+	delete(s.buckets[bucket], string(key))
+
+	return nil
+}
+
+func (s *MemoryStorage) GetAll(bucket string) ([]KeyValuePair, error) {
 	if !s.HasBucket(bucket) {
 		return nil, fmt.Errorf("bucket: %s not exist", bucket)
 	}
 
-	var res [][]byte
-	for _, pair := range s.buckets[bucket].Pairs {
-		res = append(res, pair.Data)
+	var res []KeyValuePair
+	for k, v := range s.buckets[bucket] {
+		res = append(res, KeyValuePair{Key: []byte(k), Value: v})
 	}
 	return res, nil
 }
 
-func (s *MemoryStorage) Get(bucket, key string) ([]byte, error) {
+func (s *MemoryStorage) HasKey(bucket string, key []byte) bool {
 	if !s.HasBucket(bucket) {
-		return nil, fmt.Errorf("bucket: %s not exist", bucket)
-	}
-	return s.buckets[bucket][key], nil
-}
-
-func (s *MemoryStorage) Put(bucket, key string, data []byte) error {
-	if !s.HasBucket(bucket) {
-		s.buckets[bucket] = make([]MemPair)
+		return false
 	}
 
-	s.buckets[bucket][key] = data
-	return nil
+	data := s.buckets[bucket][string(key)]
+	return data != nil && len(data) > 0
 }
 
 func (s *MemoryStorage) HasBucket(bucket string) bool {
@@ -68,7 +95,21 @@ func (s *MemoryStorage) HasBucket(bucket string) bool {
 }
 
 func (s *MemoryStorage) CreateBucket(bucket string) error {
-	//s.buckets[bucket] =
+	s.buckets[bucket] = make(map[string]MemValue)
 	return nil
 }
-*/
+
+func (s *MemoryStorage) RowCount(bucket string) int {
+	if !s.HasBucket(bucket) {
+		return 0
+	}
+
+	return len(s.buckets[bucket])
+}
+
+func (s *MemoryStorage) NextSequence(bucket string) uint64 {
+	res := s.sequences[bucket]
+	res++
+	s.sequences[bucket] = res
+	return res
+}

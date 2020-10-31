@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/alexeyqian/gochain/entity"
-
-	"github.com/alexeyqian/gochain/store"
 )
 
 type Book struct {
@@ -20,9 +18,7 @@ type Book struct {
 // func test db reopen
 
 func TestSessionUndo(t *testing.T) {
-	pathname := "test.db"
-	storage := store.NewBoltStorage(pathname)
-	udb := NewUndoableDB(storage)
+	udb := NewTestDB()
 
 	udb.Open()
 	table := "book"
@@ -67,9 +63,7 @@ func TestSessionUndo(t *testing.T) {
 }
 
 func TestSessionUndoExtra(t *testing.T) {
-	pathname := "test.db"
-	storage := store.NewBoltStorage(pathname)
-	udb := NewUndoableDB(storage)
+	udb := NewTestDB()
 
 	udb.Open()
 	table := "book"
@@ -165,9 +159,7 @@ func TestSessionUndoExtra(t *testing.T) {
 // commit session should empty revision table, and keep all data
 
 func TestSessionCommit(t *testing.T) {
-	pathname := "test.db"
-	storage := store.NewBoltStorage(pathname)
-	udb := NewUndoableDB(storage)
+	udb := NewTestDB()
 
 	udb.Open()
 	table := "book"

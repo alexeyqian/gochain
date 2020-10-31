@@ -9,6 +9,13 @@ const AutoIncrementKey = "_auto_increment_key_"
 // has to be big endian now, other wise the bit order sort of the bolt storage might not working
 const IsIntKeyEncodedInBigEndian = true
 
+type KeyType int
+
+const ( // KeyType Enum
+	IntKey    KeyType = 0
+	StringKey         = 1
+)
+
 type KeyValuePair struct {
 	Key   []byte
 	Value []byte
