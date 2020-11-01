@@ -4,27 +4,23 @@ import (
 	"io"
 
 	"github.com/alexeyqian/gochain/protocol"
+	"github.com/alexeyqian/gochain/utils"
 )
 
-func (nd Node) handlePing(header *protocol.MessageHeader, conn io.ReadWriter) error {
+func (nd *Node) handlePing(header *protocol.MessageHeader, conn io.ReadWriter) error {
 	var ping protocol.MsgPing
 
-	lr := io.LimitReader(comm, int64(header.Length))
-	if err := binary.NewDecoder(lr).Decode(&ping); err != nil {
-		return err
-	}
+	lr := io.LimitReader(conn, int64(header.Length))
+	utils.DeserializeWithReader(&ping, lr)
 
 	// after receiving a ping
 	// send out a pong response
-	pong, err := protocol.NewPongMsg(n.Network, ping.Nonce)
+	pong, err := protocol.NewPongMsg(nd.Network, ping.Nonce)
 	if err != nil {
 		return err
 	}
 
-	msg, err := binary.Marshal(pong)
-	if err != nil {
-		return err
-	}
+	msg := utils.Serialize(pong)
 
 	if _, err := conn.Write(msg); err != nil {
 		return err

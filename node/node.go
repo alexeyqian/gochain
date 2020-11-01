@@ -1,7 +1,6 @@
 package node
 
 import (
-	"github.com/alexeyqian/gochain/protocol"
 	"bytes"
 	"encoding/gob"
 	"fmt"
@@ -9,10 +8,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
+
+	"github.com/alexeyqian/gochain/protocol"
 
 	"github.com/alexeyqian/gochain/binary"
 )
+
+const nodeVersion = 1
 
 type Node struct {
 	Address    string
@@ -20,35 +22,36 @@ type Node struct {
 	// Dependency Injection for testing
 	//BlockChain *chain.Chain
 	//ApiServer  *network.ApiServer
-	Peers  map[string]*Peer
-	PingCh chan peerPing
-	PongCh chan uint64
+	Peers   map[string]*Peer
+	PingCh  chan peerPing
+	PongCh  chan uint64
 	mempool *Mempool
+	// pointers to ledger and statusdb
 }
 
-func NewNode(network, userAgent string)(*Node, error){
+func NewNode(addr, network string, knownNodes []string) (*Node, error) {
 	networkMagic, ok := protocol.Networks[network]
-	if !ok{
+	if !ok {
 		return nil, fmt.Errorf("unsupported network %s", network)
 	}
 
 	return &Node{
-		Network: network,
+		Address:      addr,
+		Network:      network,
+		KnownNodes:   knownNodes,
 		NetworkMagic: networkMagic,
-		Peers: make(map[string]*Peer),
-		PingCh: make(chan peerPing),
-		pongCh: make(chan uint64),
-		UserAgent: userAgent,
+		Peers:        make(map[string]*Peer),
+		PingCh:       make(chan peerPing),
+		pongCh:       make(chan uint64),
+		UserAgent:    "default agent 1.0",
 	}, nil
 }
 
 // before adding a peer, we must first get basic information about it.
 // finish a version handshake
-
-// TODO: replace Start
-func (nd Node) Run(nodeAddr string) error{
+func (nd Node) Run(nodeAddr string) error {
 	peerAddr, err := ParseNodeAddr(nodeAddr)
-	if err != nil{
+	if err != nil {
 		return error
 	}
 
@@ -59,23 +62,23 @@ func (nd Node) Run(nodeAddr string) error{
 		peerAddr.Port,
 	)
 
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	msgSerialized, err := binary.Marshal(version)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	conn, err := net.Dial("tcp", nodeAddr)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
 	_, err = conn.Write(msgSerialized)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -84,10 +87,10 @@ func (nd Node) Run(nodeAddr string) error{
 
 	tmp := make([]byte, protocol.MsgHeaderLength)
 
-	loop:
-	for{
+loop:
+	for {
 		n, err := conn.Read(tmp)
-		if err != nil{
+		if err != nil {
 			if err != io.EOF {
 				return err
 			}
@@ -95,26 +98,26 @@ func (nd Node) Run(nodeAddr string) error{
 		}
 
 		var msgHeader protocol.MessageHeader
-		if err := binary.NewDecoder(bytes.NewReader(tmp[:n])).Decode(&msgHeader); err != nil{
+		if err := binary.NewDecoder(bytes.NewReader(tmp[:n])).Decode(&msgHeader); err != nil {
 			fmt.Errorf("invalide header: %+v", err)
 			continue
 		}
 
-		if err := msgHeader.Validate(); err != nil{
+		if err := msgHeader.Validate(); err != nil {
 			fmt.Errorf(err)
 			continue
 		}
 
 		fmt.Printf("received message: %s\n", msgHeader.Command)
 
-		switch msgHeader.CommandString(){
+		switch msgHeader.CommandString() {
 		case "version":
-			if err := nd.handleVersion(&msgHeader, conn); err != nil{
+			if err := nd.handleVersion(&msgHeader, conn); err != nil {
 				fmt.Errorf("failed to handle 'version': %+v", err)
 				continue
 			}
 		case "verack":
-			if err := nd.handleVerack(&msgHeader, conn); err != nil{
+			if err := nd.handleVerack(&msgHeader, conn); err != nil {
 				fmt.Errorf("failed to handler 'verack': %+v", err)
 				continue
 			}
@@ -129,15 +132,15 @@ func (nd Node) Run(nodeAddr string) error{
 				continue
 			}
 		case "inv":
-			if err := no.handleInv(&msgHeader, conn); err != nil {
-				fmt.Errorf("failed to handle 'inv': %+v", err)
-				continue
-			}
+			//if err := no.handleInv(&msgHeader, conn); err != nil {
+			//	fmt.Errorf("failed to handle 'inv': %+v", err)
+			//	continue
+			//}
 		case "tx":
 			if err := no.handleTx(&msgHeader, conn); err != nil {
 				fmt.Errorf("failed to handle 'tx': %+v", err)
 				continue
-			}		
+			}
 		}
 
 	}
@@ -208,7 +211,7 @@ func (nd *Node) broadcaseMyVersion() {
 func (nd *Node) sendMyVersion(toAddress string) {
 	//height := chain.GetBaseHeight()
 	height := 100
-	payload := gobEncode(nodeVersionRequest{nodeVersion, height, nd.Address})
+	payload := utils.Serialize(nodeVersionRequest{nodeVersion, height, nd.Address})
 	request := append(commandToBytes(commandVersion), payload...)
 	nd.sendData(toAddress, request)
 }
@@ -238,28 +241,12 @@ func (nd *Node) handleVersionRequest(request []byte) {
 	}
 }
 
-func (nd *Node) handleInv(request []byte) {
-	var buff bytes.Buffer
-	var payload InvRequest
-
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		fmt.Println("cannot decode payload")
-		return
-	}
-
-	// processing ...
-
-}
-
 func (nd *Node) handleGetBlockHashes(request []byte) {
 
 }
 
 func (nd *Node) sendGetBlockHashesRequest(addr string) {
-	payload := gobEncode(GetBlockHashesRequest{nd.Address})
+	payload := utils.Serialize(GetBlockHashesRequest{nd.Address})
 	request := append(commandToBytes(commandGetBlockHashes), payload...)
 	nd.sendData(addr, request)
 }
@@ -290,114 +277,27 @@ func (nd *Node) sendData(addr string, data []byte) {
 
 	_, err = io.Copy(conn, bytes.NewReader(data))
 	if err != nil {
-		log.Panic(err)
+		log.Panic(err) // TODO: panic or return error?
 	}
 }
 
-// As soon as a peer is added, a peer liveliness monitor should start running. Let’s define how it should work:
-// 1. The monitor triggers once in a while and sends a ‘ping’ message to the peer.
-// 2. It waits for a ‘pong’ message containing the nonce from the ‘ping’ message.
-// 3. If no ‘pong’ message is received in a certain time span, then the peer is considered dead and is removed from the list.
-
-func (nd Node) monitorPeers() {
-	// TODO: should we use peerID as key?
-	// since nonc might be same from different peers
-	peerPings := make(map[uint64]string)
-
-	for {
-		select {
-		case pp := <-nd.PingCh:
-			peerPings[pp.nonce] = pp.peerID
-		
-		// pass pong messages from the handler
-		case nonce := <-nd.PongCh:
-			peerID := peerPings[nonce]
-			if peerID == "" { // make sure peer is still in the list
-				break
-			}
-
-			peer := nd.Peers[peerID]
-			if peer == nil {
-				break
-			}
-
-			peer.PongCh <- nonce
-			// after directing the nonce, it should be removed to avoid memory leak
-			delete(peerPings, nonce)		
-	}
-}
-
-// sends ping messages
-// waits for replies and handles 'no replay' case
-func (nd *Node) monitorPeer(peer *Peer) {
-	for {
-		time.Sleep(pingIntervalSec * time.Second)
-		ping, nonce, err := protocol.NewPingMsg(nd.Network)
-		msg, err := binary.Marshal(ping)
-		if err != nil{
-			fmt.Fatalf("monitor peer, binary marshal: %v", err)
-		}
-
-		if _, err := peer.Connection.Write(msg); err != nil {
-			nd.disconnectPeer(peer.ID())
-		}
-
-		fmt.Debugf("send 'ping' to %s", peer)
-
-		nd.PingCh <- peerPing{
-			nonce: nonce, 
-			peerID: peer.ID()
-		}
-
-		t := time.NewTimer(pingTimeoutSec * time.Second)
-
-		select{
-		case pn := <- peer.PongCh:
-			if pn != nonce{
-				fmt.Errorf("nonce doesn't match for %s, expected %d, got %d", peer, nonce, pn)
-				nd.disconnectPeer(peer.ID)
-				return
-			}
-			ftm.Debugf("got 'pong' from %s", peer)
-		case <- t.C:
-			nd.disconnectPeer(peer.ID())
-			return
-		}
-
-		// TODO: timer and return sequence
-		t.Stop()
-	}
-}
-
-func (nd Node) disconnectPeer(peerID string){
-	fmt.Printf("disconnectiong peer %s\n", peerID)
-
-	peer := nd.Peers[peerID]
-	if peer == nil{
-		return
-	}
-
-	peer.Connection.Close()
-}
-
-func (nd Node) Mempool() map[string]*protocol.MsgTx{
+func (nd Node) Mempool() map[string]*protocol.MsgTx {
 	m := make(map[string]*protocol.MsgTx)
 
-	for k, v := range nd.mempool.txs{
+	for k, v := range nd.mempool.txs {
 		m[string(k)] = v
 	}
 
 	return m
 }
 
-func (nd Node) handleBlock(header *protocol.MessageHeader, conn io.ReadWriter) error{
-	var block protocol.MsgBlock
+func (nd *Node) disconnectPeer(peerID string) {
+	fmt.Printf("disconnectiong peer %s\n", peerID)
 
-	lr := io.LimitReader(conn, int64(header.Length))
-	if err := binary.NewDecoder(lr).Decode(&block); err != nil{
-		return err
+	peer := nd.Peers[peerID]
+	if peer == nil {
+		return
 	}
 
-	nd.mempool.NewBlockCh <- block
-	return nil
+	peer.Connection.Close()
 }

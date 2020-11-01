@@ -1,9 +1,9 @@
 package entity
 
 import (
-	"bytes"
-	"encoding/gob"
 	"reflect"
+
+	"github.com/alexeyqian/gochain/utils"
 )
 
 type Entity interface {
@@ -77,20 +77,9 @@ func GetID(e Entity) string {
 }
 
 func Serialize(e Entity) []byte {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(e)
-	if err != nil {
-		panic(err)
-	}
-
-	return buf.Bytes()
+	return utils.Serialize(e)
 }
 
 func Deserialize(e Entity, data []byte) {
-	dec := gob.NewDecoder(bytes.NewReader(data))
-	err := dec.Decode(e)
-	if err != nil {
-		panic(err)
-	}
+	utils.Deserialize(e, data)
 }

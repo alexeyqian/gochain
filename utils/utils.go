@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/gob"
 	"fmt"
+	"io"
 	"log"
 )
 
@@ -32,4 +35,31 @@ func FindString(slice []string, val string) (int, bool) {
 		}
 	}
 	return -1, false
+}
+
+func Serialize(e interface{}) []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(e)
+	if err != nil {
+		panic(err)
+	}
+
+	return buf.Bytes()
+}
+
+func Deserialize(e interface{}, data []byte) {
+	dec := gob.NewDecoder(bytes.NewReader(data))
+	err := dec.Decode(e)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func DeserializeWithReader(e interface{}, reader io.Reader) {
+	dec := gob.NewDecoder(reader)
+	err := dec.Decode(e)
+	if err != nil {
+		panic(err)
+	}
 }

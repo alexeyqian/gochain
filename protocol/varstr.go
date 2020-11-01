@@ -3,13 +3,13 @@ package protocol
 // to serialize a message, we need to knwo legnths of all fields.
 // Since strings aren't fixed, ew also need to store length of each string
 type VarStr struct {
-	Length uint8 // limited to size 256
+	Length uint16
 	String string
 }
 
 func NewVarStr(str string) VarStr {
 	return VarStr{
-		Length: uint8(len(str)),
+		Length: uint16(len(str)),
 		String: str,
 	}
 }

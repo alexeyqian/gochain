@@ -9,8 +9,16 @@ import (
 )
 
 const (
+	Version   = 1
+	UserAgent = "/gochain:1.0.0"
+
+	NodeTypeFull    = 1
+	NodeTypeWitness = 2
+	NodeTypeSeed    = 4
+)
+
+const (
 	checksumLength  = 4
-	nodeNetwork     = 1
 	magicLength     = 4
 	MsgHeaderLength = magicLength + commandLength + checksumLength + 4 // 4 layload length value
 )
@@ -29,8 +37,8 @@ type Magic [magicLength]byte
 type MessageHeader struct {
 	Magic    [magicLength]byte
 	Command  [commandLength]byte
-	Length   uint32 // length of payload
-	Checksum [checksumLength]byte
+	Length   uint32               // length of payload
+	Checksum [checksumLength]byte // checksum of the payload
 }
 
 type Message struct {
@@ -49,10 +57,7 @@ func NewMessage(network, cmd string, payload interface{}) (*Message, error) {
 		return nil, fmt.Errorf("unsupported comamnd %s", cmd)
 	}
 
-	serializedPayload, err := utils.SerializeStruct(payload)
-	if err != nil {
-		return nil, err
-	}
+	serializedPayload := utils.Serialize(payload)
 
 	msg := Message{
 		MessageHeader: MessageHeader{
@@ -68,7 +73,7 @@ func NewMessage(network, cmd string, payload interface{}) (*Message, error) {
 }
 
 func (mh MessageHeader) CommandString() string {
-	return strings.Trim(string(mh.Command[:]), string(0))
+	return strings.Trim(string(mh.Command[:]), string("0"))
 }
 
 func (mh MessageHeader) Validate() error {

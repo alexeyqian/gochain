@@ -1,18 +1,20 @@
 package node
 
 import (
+	"fmt"
 	"io"
-	"log"
+
+	"github.com/alexeyqian/gochain/protocol"
+	"github.com/alexeyqian/gochain/utils"
 )
 
-func (nd Node) handleTx(header *protocol.MessageHeader, conn io.ReadWriter) error {
+func (nd *Node) handleTx(header *protocol.MessageHeader, conn io.ReadWriter) error {
 	var tx protocol.MsgTx
 
 	lr := io.LimitReader(conn, int64(header.Length))
-	if err := binary.NewDecoder(lr).Decode(&tx); err != nil {
-		return err
-	}
-	log.Printf("transaction : %+v\n", tx)
+	utils.DeserializeWithReader(&tx, lr)
+
+	fmt.Printf("transaction : %+v\n", tx)
 
 	nd.mempool.NewTxCh <- tx
 	return nil

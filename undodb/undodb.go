@@ -75,7 +75,7 @@ func (udb *UndoableDB) GetAll(table string) map[string][]byte {
 
 	items, _ := udb.store.GetAll(table)
 	for _, v := range items {
-		res[v.Key] = v.Value
+		res[string(v.Key)] = v.Value
 	}
 	return res
 }

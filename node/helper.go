@@ -1,11 +1,5 @@
 package node
 
-import (
-	"bytes"
-	"encoding/gob"
-	"log"
-)
-
 // convert string to bytes data, leave the rest bytes empty
 func commandToBytes(command string) []byte {
 	var data [commandLength]byte
@@ -32,14 +26,4 @@ func bytesToCommand(data []byte) string {
 
 func extractCommand(request []byte) []byte {
 	return request[:commandLength]
-}
-
-func gobEncode(data interface{}) []byte {
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(data)
-	if err != nil {
-		log.Panic(err)
-	}
-	return buff.Bytes()
 }

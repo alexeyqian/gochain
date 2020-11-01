@@ -22,12 +22,12 @@ const VoteBucket = "vote"
 const VoteStateBucket = "votestate"
 
 type StatusDB struct {
-	udb undodb.UndoableDB
+	udb *undodb.UndoableDB
 }
 
 func NewStatusDB(s store.Storage) *StatusDB {
 	return &StatusDB{
-		udb: undodb.NewUndoableDB(store.Storage),
+		udb: undodb.NewUndoableDB(s),
 	}
 }
 
@@ -80,15 +80,15 @@ func (sdb *StatusDB) GetAccounts() []*entity.Account {
 	var res []*entity.Account
 	for _, value := range sdb.getAll(AccountBucket) {
 		var e entity.Account
-		entity.Deserialize(e, value)
+		entity.Deserialize(&e, value)
 		res = append(res, &e)
 	}
 	return res
 }
 
-func GetAccountByName(name string) (*entity.Account, error) {
+func (sdb *StatusDB) GetAccountByName(name string) (*entity.Account, error) {
 	var res *entity.Account
-	for _, acc := range GetAccounts() {
+	for _, acc := range sdb.GetAccounts() {
 		if acc.Name == name {
 			res = acc
 			break
@@ -118,7 +118,7 @@ func (sdb *StatusDB) GetArticles() []*entity.Article {
 	var res []*entity.Article
 	for _, value := range sdb.getAll(ArticleBucket) {
 		var e entity.Article
-		entity.Deserialize(e, value)
+		entity.Deserialize(&e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -144,7 +144,7 @@ func (sdb *StatusDB) GetComments() []*entity.Comment {
 	var res []*entity.Comment
 	for _, value := range sdb.getAll(CommentBucket) {
 		var e entity.Comment
-		entity.Deserialize(e, value)
+		entity.Deserialize(&e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -170,7 +170,7 @@ func (sdb *StatusDB) GetVotes() []*entity.Vote {
 	var res []*entity.Vote
 	for _, value := range sdb.getAll(VoteBucket) {
 		var e entity.Vote
-		entity.Deserialize(e, value)
+		entity.Deserialize(&e, value)
 		res = append(res, &e)
 	}
 	return res
@@ -202,10 +202,18 @@ func (sdb *StatusDB) getEntityByID(bucket, key string, e entity.Entity) error {
 	entity.Deserialize(e, data)
 	return nil
 }
+func (sdb *StatusDB) getAll(bucket string) [][]byte {
+	var res [][]byte
+	for _, v := range sdb.udb.GetAll(bucket) {
+		res = append(res, v)
+	}
+
+	return res
+}
 
 func (sdb *StatusDB) getAllEntities(bucket string) []entity.Entity {
 	var res []entity.Entity
-	for k, v := range sdb.udb.GetAll(bucket) {
+	for _, v := range sdb.udb.GetAll(bucket) {
 		var e entity.Entity
 
 		switch bucket {
@@ -219,12 +227,12 @@ func (sdb *StatusDB) getAllEntities(bucket string) []entity.Entity {
 			e = entity.Comment{}
 		case VoteBucket:
 			e = entity.Vote{}
-		defalut:
+		default:
 			panic("unknown entity type.")
 		}
 
-		temp, _ := entity.Deserialize(e, v)
-		res = append(res, &temp)
+		entity.Deserialize(&e, v)
+		res = append(res, &e)
 	}
 
 	return res
