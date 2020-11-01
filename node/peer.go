@@ -18,7 +18,6 @@ type Peer struct {
 	Connection io.ReadWriteCloser
 	PongCh     chan uint64 // pass pong replies
 	NodeType   uint64      // describes feature supported by the peer
-	UserAgent  string
 	Version    int32
 }
 
@@ -27,7 +26,7 @@ func (p *Peer) ID() string {
 }
 
 func (p *Peer) String() string {
-	return fmt.Sprintf("%s (%s)", p.UserAgent, p.Address)
+	return fmt.Sprintf("%s", p.Address)
 }
 
 type peerPing struct {

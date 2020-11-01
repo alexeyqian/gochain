@@ -11,7 +11,10 @@ func (nd *Node) handleBlock(header *protocol.MessageHeader, conn io.ReadWriter) 
 	var block protocol.MsgBlock
 
 	lr := io.LimitReader(conn, int64(header.Length))
-	utils.DeserializeWithReader(&block, lr)
+	err := utils.DeserializeWithReader(&block, lr)
+	if err != nil {
+		return err
+	}
 
 	nd.mempool.NewBlockCh <- block
 	return nil

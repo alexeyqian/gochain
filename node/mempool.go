@@ -1,8 +1,6 @@
 package node
 
 import (
-	"encoding/hex"
-
 	"github.com/alexeyqian/gochain/protocol"
 )
 
@@ -13,6 +11,7 @@ type Mempool struct {
 	txs map[string]*protocol.MsgTx
 }
 
+/*
 func (m Mempool) Run() {
 	for {
 		select {
@@ -32,4 +31,4 @@ func (m Mempool) Run() {
 		}
 
 	}
-}
+}*/

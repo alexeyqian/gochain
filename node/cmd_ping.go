@@ -11,7 +11,10 @@ func (nd *Node) handlePing(header *protocol.MessageHeader, conn io.ReadWriter) e
 	var ping protocol.MsgPing
 
 	lr := io.LimitReader(conn, int64(header.Length))
-	utils.DeserializeWithReader(&ping, lr)
+	erro := utils.DeserializeWithReader(&ping, lr)
+	if err != nil {
+		return err
+	}
 
 	// after receiving a ping
 	// send out a pong response

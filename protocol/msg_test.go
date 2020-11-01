@@ -24,7 +24,6 @@ func TestMessageSerialization(t *testing.T) {
 			Port:     9334,
 		},
 		Nonce:       31337,
-		UserAgent:   NewVarStr(UserAgent),
 		StartHeight: -1,
 	}
 	msg, err := NewMessage("simnet", "version", version)

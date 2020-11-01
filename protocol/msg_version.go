@@ -19,7 +19,6 @@ type MsgVersion struct {
 	AddrRecv    VersionNetAddr
 	AddrFrom    VersionNetAddr
 	Nonce       uint64
-	UserAgent   VarStr
 	StartHeight int32
 }
 
@@ -39,7 +38,6 @@ func NewVersionMsg(network, userAgent string, peerIP IPv4, peerPort uint16) (*Me
 			Port:     9334,
 		},
 		Nonce:       rand.Uint64(),
-		UserAgent:   NewVarStr(userAgent),
 		StartHeight: -1,
 	}
 

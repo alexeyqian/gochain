@@ -23,7 +23,7 @@ type SendingBlock struct {
 func sendBlock(addr string, b *core.Block) {
 	data := SendingBlock{Address: nodeAddress, BlockData: b.Serialize()}
 	payload := utils.Serialize(data)
-	request := append(commandToBytes("block"), payload...)
+	request := append(protocol.CommandToBytes("block"), payload...)
 	sendData(addr, request)
 }
 

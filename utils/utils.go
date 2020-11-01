@@ -56,10 +56,7 @@ func Deserialize(e interface{}, data []byte) {
 	}
 }
 
-func DeserializeWithReader(e interface{}, reader io.Reader) {
+func DeserializeWithReader(data interface{}, reader io.Reader) error {
 	dec := gob.NewDecoder(reader)
-	err := dec.Decode(e)
-	if err != nil {
-		panic(err)
-	}
+	return dec.Decode(data)
 }

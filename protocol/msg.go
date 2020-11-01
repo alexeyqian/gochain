@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	Version   = 1
-	UserAgent = "/gochain:1.0.0"
+	Version = 1
 
 	NodeTypeFull    = 1
 	NodeTypeWitness = 2
@@ -108,6 +107,11 @@ func checksum(data []byte) [checksumLength]byte {
 	var hashArr [checksumLength]byte
 	copy(hashArr[:], hash[0:checksumLength])
 	return hashArr
+}
+
+func ValidateNetwork(network string) bool {
+	_, ok := networks[network]
+	return ok
 }
 
 /* only used for customized serialization

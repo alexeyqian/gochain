@@ -1,7 +1,11 @@
 package node
 
-import "io"
+import (
+	"io"
 
-func (nd *Node) handleVerack(header *MessageHeader, conn io.ReadWriter) error {
+	"github.com/alexeyqian/gochain/protocol"
+)
+
+func (nd *Node) handleVerack(header *protocol.MessageHeader, conn io.ReadWriter) error {
 	return nil
 }

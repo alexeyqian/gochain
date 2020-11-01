@@ -10,6 +10,7 @@ import (
 	"net"
 
 	"github.com/alexeyqian/gochain/protocol"
+	"github.com/alexeyqian/gochain/utils"
 
 	"github.com/alexeyqian/gochain/binary"
 )
@@ -18,6 +19,7 @@ const nodeVersion = 1
 
 type Node struct {
 	Address    string
+	Network    string
 	KnownNodes []string
 	// Dependency Injection for testing
 	//BlockChain *chain.Chain
@@ -30,20 +32,18 @@ type Node struct {
 }
 
 func NewNode(addr, network string, knownNodes []string) (*Node, error) {
-	networkMagic, ok := protocol.Networks[network]
+	ok := protocol.ValidateNetwork(network)
 	if !ok {
 		return nil, fmt.Errorf("unsupported network %s", network)
 	}
 
 	return &Node{
-		Address:      addr,
-		Network:      network,
-		KnownNodes:   knownNodes,
-		NetworkMagic: networkMagic,
-		Peers:        make(map[string]*Peer),
-		PingCh:       make(chan peerPing),
-		pongCh:       make(chan uint64),
-		UserAgent:    "default agent 1.0",
+		Address:    addr,
+		Network:    network,
+		KnownNodes: knownNodes,
+		Peers:      make(map[string]*Peer),
+		PingCh:     make(chan peerPing),
+		pongCh:     make(chan uint64),
 	}, nil
 }
 
@@ -55,9 +55,8 @@ func (nd Node) Run(nodeAddr string) error {
 		return error
 	}
 
-	version, err := protocol.NewVersinMsg(
+	version, err := protocol.NewVersionMsg(
 		nd.Network,
-		nd.UserAgent,
 		peerAddr.IP,
 		peerAddr.Port,
 	)
@@ -83,7 +82,7 @@ func (nd Node) Run(nodeAddr string) error {
 	}
 
 	go nd.monitorPeers()
-	go nd.mempool.Run()
+	//go nd.mempool.Run() // TODO: uncomment
 
 	tmp := make([]byte, protocol.MsgHeaderLength)
 
@@ -98,7 +97,7 @@ loop:
 		}
 
 		var msgHeader protocol.MessageHeader
-		if err := binary.NewDecoder(bytes.NewReader(tmp[:n])).Decode(&msgHeader); err != nil {
+		if err := utils.DeserializeWithReader(&msgHeader, bytes.NewReader(tmp[:n])); err != nil {
 			fmt.Errorf("invalide header: %+v", err)
 			continue
 		}
@@ -122,12 +121,12 @@ loop:
 				continue
 			}
 		case "ping":
-			if err := no.handlePing(&msgHeader, conn); err != nil {
+			if err := nd.handlePing(&msgHeader, conn); err != nil {
 				fmt.Errorf("failed to handle 'ping': %+v", err)
 				continue
 			}
 		case "pong":
-			if err := no.handlePong(&msgHeader, conn); err != nil {
+			if err := nd.handlePong(&msgHeader, conn); err != nil {
 				fmt.Errorf("failed to handle 'pong': %+v", err)
 				continue
 			}
@@ -138,7 +137,7 @@ loop:
 			//}
 		case "tx":
 			if err := no.handleTx(&msgHeader, conn); err != nil {
-				fmt.Errorf("failed to handle 'tx': %+v", err)
+				fmt.Printf("failed to handle 'tx': %s", err)
 				continue
 			}
 		}
@@ -158,7 +157,7 @@ func (nd *Node) Start() {
 	defer ln.Close()
 
 	// chain.Open()
-
+	g
 	nd.broadcaseMyVersion()
 
 	for {
@@ -177,7 +176,7 @@ func (nd *Node) handleConnection(conn net.Conn) {
 	if err != nil {
 		log.Panic(err)
 	}
-	command := bytesToCommand(request[:commandLength])
+	command := protocol.BytesToCommand(request[:commandLength])
 	fmt.Printf("%s received command: %s from %s\n", nd.Address, command, conn.RemoteAddr())
 
 	switch command {
@@ -212,7 +211,7 @@ func (nd *Node) sendMyVersion(toAddress string) {
 	//height := chain.GetBaseHeight()
 	height := 100
 	payload := utils.Serialize(nodeVersionRequest{nodeVersion, height, nd.Address})
-	request := append(commandToBytes(commandVersion), payload...)
+	request := append(protocol.CommandToBytes(commandVersion), payload...)
 	nd.sendData(toAddress, request)
 }
 
@@ -247,7 +246,7 @@ func (nd *Node) handleGetBlockHashes(request []byte) {
 
 func (nd *Node) sendGetBlockHashesRequest(addr string) {
 	payload := utils.Serialize(GetBlockHashesRequest{nd.Address})
-	request := append(commandToBytes(commandGetBlockHashes), payload...)
+	request := append(protocol.CommandToBytes(commandGetBlockHashes), payload...)
 	nd.sendData(addr, request)
 }
 
