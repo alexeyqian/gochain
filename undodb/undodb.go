@@ -16,6 +16,9 @@ const metaKey = "_meta_key_" // only one record in metaTable, and the key of the
 // key in revision table is an stringized auto increment id
 const revisionTable = "_revision_"
 
+// TODO: make UndoableDB as interface
+// NewMemUndoableDB, NewFileUndoableDB
+
 func NewUndoableDB(storage store.Storage) *UndoableDB {
 	udb := UndoableDB{
 		store: storage,
@@ -65,4 +68,14 @@ func (udb *UndoableDB) HasKey(table, key string) bool {
 // GetInt // table is using auto increment id as key
 func (udb *UndoableDB) Get(table, key string) ([]byte, error) {
 	return udb.store.Get(table, []byte(key))
+}
+
+func (udb *UndoableDB) GetAll(table string) map[string][]byte {
+	res := make(map[string][]byte)
+
+	items, _ := udb.store.GetAll(table)
+	for _, v := range items {
+		res[v.Key] = v.Value
+	}
+	return res
 }

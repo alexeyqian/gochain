@@ -43,13 +43,16 @@ type Storage interface {
 	 */
 	Put(bucket string, key []byte, data []byte) error
 
+	// auto key is uint64
+	PutWithAutoKey(bucket string, data []byte) error
+
 	/*
 	 * delete key/value pairs, if buket or key not exist, just do nothing
 	 */
 	Delete(bucket string, key []byte) error
 
 	HasKey(bucket string, key []byte) bool
-
+	// TODO: CreateBucket(bucket string, type) error
 	CreateBucket(bucket string) error
 	HasBucket(bucket string) bool
 	RowCount(bucket string) int

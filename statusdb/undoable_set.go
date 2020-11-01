@@ -1,5 +1,6 @@
 package statusdb
 
+/*
 import (
 	"github.com/alexeyqian/gochain/utils"
 	"fmt"
@@ -9,16 +10,16 @@ import (
 type UndoableSet struct{
 	storage *Storage
 	dataBucket string
-	stateBucket string	
+	stateBucket string
 	latestRevision uint32
 	count uint32
 }
 
-type UndoState struct{	
+type UndoState struct{
 	revision uint32
 	newIDs []string
 	removedValues map[string][]byte
-	oldValues map[string][]byte	
+	oldValues map[string][]byte
 }
 
 func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
@@ -47,11 +48,11 @@ func NewUndoableSet(s Storage, name, elementType string) (*UndoableSet, error){
 	return &us, nil
 }
 
-func (us *UndoableSet) Create(key string, data []byte) error{	
+func (us *UndoableSet) Create(key string, data []byte) error{
 	if key == "" {
 		return fmt.Errorf("create: entity must have ID.")
 	}
-	
+
 	if us.storage.HasKey(us.dataBucket, key) {
 		return fmt.Errorf("create: entity already exist.")
 	}
@@ -64,7 +65,7 @@ func (us *UndoableSet) Create(key string, data []byte) error{
 
 	// 2. save to data bucket
 	err = us.storage.Put(us.dataBucket, key, data)
-	if err != nil{ 
+	if err != nil{
 		return err
 	}
 
@@ -73,7 +74,7 @@ func (us *UndoableSet) Create(key string, data []byte) error{
 }
 
 func (us *UndoableSet) onCreate(key string) error{
-	if !us.hasSession() { 
+	if !us.hasSession() {
 		return nil
 	}
 
@@ -103,11 +104,11 @@ func (us *UndoableSet) Update(key string, data []byte) error{
 	}
 
 	// 2. udpate data bucket
-	return us.storage.Put(us.dataBucket, key, data)	
+	return us.storage.Put(us.dataBucket, key, data)
 }
 
 func (us *UndoableSet) onUpdate(key string, existing []byte) error{
-	if !us.hasSession() { 
+	if !us.hasSession() {
 		return
 	}
 
@@ -130,7 +131,7 @@ func (us *UndoableSet) onUpdate(key string, existing []byte) error{
 
 	state.oldValues[key] = existing
 	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
-	
+
 	return nil
 }
 
@@ -147,7 +148,7 @@ func (us *UndoableSet) Delete(key string) error{
 	if err != nil{
 		return err
 	}
-	
+
 	// 1. udpate state bucket
 	err = us.onDelete(key, existing)
 	if err != nil{
@@ -155,7 +156,7 @@ func (us *UndoableSet) Delete(key string) error{
 	}
 
 	// 2. update data bucket
-	err = us.storage.Delete(us.dataBucket, id)	
+	err = us.storage.Delete(us.dataBucket, id)
 	if err != nil{
 		return err
 	}
@@ -165,7 +166,7 @@ func (us *UndoableSet) Delete(key string) error{
 
 
 func onDelete(key string, existing []byte) error {
-	if !us.hasSession() { 
+	if !us.hasSession() {
 		return nil
 	}
 
@@ -187,7 +188,7 @@ func onDelete(key string, existing []byte) error {
 		delete(state.oldValues, key)
 		state.removedValues[key] = existing
 	}
-		
+
 	// if the removed one is already removed
 	_, ok = state.removedValues[key]
 	if ok {
@@ -195,7 +196,7 @@ func onDelete(key string, existing []byte) error {
 	}
 
 	state.RemoveValues[key] = existing
-	
+
 	us.storage.Put(us.stateBucket, state.revision, utils.Serialize(state))
 }
 
@@ -263,4 +264,4 @@ func (us *UndoableSet) latestState() *UndoState{
 	var state UndoState
 	entity.Deserialize(&state, data)
 	return &state
-}
+}*/

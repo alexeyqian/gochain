@@ -67,6 +67,10 @@ func (s *BoltStorage) Get(bucket string, key []byte) ([]byte, error) {
 	return temp, err
 }
 
+func (s *BoltStorage) PutWithAutoKey(bucket string, data []byte) error {
+	return s.Put(bucket, nil, data)
+}
+
 func (s *BoltStorage) Put(bucket string, key []byte, data []byte) error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
