@@ -25,7 +25,7 @@ type indexRecord struct {
 	Size   uint64 // size of ledger record
 }
 
-type ledger_s struct {
+type Ledger struct {
 	ledgerPath string
 	indexPath  string
 	ledger     *os.File
@@ -35,32 +35,11 @@ type ledger_s struct {
 	isReadOny bool
 }
 
-// ========== global variables ==============
-var glgr ledger_s
-
-// ========== public functions ==============
-func Open(dir string) {
-	glgr.open(dir)
+func NewLedger() *Ledger{
+	return &Ledger{}
 }
 
-func Close() {
-	glgr.close()
-}
-
-func Remove() {
-	glgr.remove()
-}
-
-func Append(blockData []byte) {
-	glgr.append(blockData)
-}
-
-func Read(bno int) ([]byte, error) {
-	return glgr.read(bno)
-}
-
-// ========== private functions ==============
-func (lg *ledger_s) open(dirPath string) error {
+func (lg *Ledger) Open(dirPath string) error {
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		os.Mkdir(dirPath, os.ModePerm)
 	}
@@ -110,7 +89,7 @@ func (lg *ledger_s) open(dirPath string) error {
 	return nil
 }
 
-func (lg *ledger_s) close() {
+func (lg *Ledger) Close() {
 	lg.isOpen = false
 	lg.ledger.Sync()
 	lg.ledger.Close()
@@ -118,7 +97,7 @@ func (lg *ledger_s) close() {
 	lg.index.Close()
 }
 
-func (lg *ledger_s) remove() error {
+func (lg *Ledger) Remove() error {
 	var err error
 	if !lg.isOpen {
 		err = os.Remove(lg.ledgerPath)
@@ -137,7 +116,7 @@ func (lg *ledger_s) remove() error {
 // ledger: ledger_record_0 | ledger_record_1 | ledger_record_2 | ...
 // index:  index_record_0  | index_record_1  | index_record_2  | ...
 // ledger_record_0 is a dummy record
-func (lg *ledger_s) append(blockData []byte) error {
+func (lg *Ledger) Append(blockData []byte) error {
 	var err error
 
 	if !lg.isOpen || lg.isReadOny {
@@ -176,7 +155,7 @@ func (lg *ledger_s) append(blockData []byte) error {
 		return err
 	}
 
-	// append block to ledger_s
+	// append block to Ledger
 	// os.File.Write is unbufferred, so no flush needed,
 	// but still need Sync to make sure operating system's file system call system call
 	// to write data to disk
@@ -186,7 +165,7 @@ func (lg *ledger_s) append(blockData []byte) error {
 	return nil
 }
 
-func (lg *ledger_s) read(bno int) ([]byte, error) {
+func (lg *Ledger) Read(bno int) ([]byte, error) {
 	var err error
 	var indexData, ledgerData []byte
 
