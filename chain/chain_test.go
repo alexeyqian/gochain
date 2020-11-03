@@ -1,18 +1,31 @@
-package tests
+package chain
 
 import (
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/alexeyqian/gochain/chain"
 	"github.com/alexeyqian/gochain/core"
-	"github.com/alexeyqian/gochain/statusdb"
+	"github.com/alexeyqian/gochain/store"
+	"github.com/alexeyqian/gochain/utils"
 )
 
-func TestGenesis(t *testing.T) {
-	chain.Open(TestDataDir)
+const testDataDir = "test_data"
 
-	gpo, _ := statusdb.GetGpo()
+func CreateTestAccount(name string) core.Transactioner {
+	var tx core.CreateAccountTransaction
+	tx.AccountId = utils.CreateUuid()
+	tx.AccountName = name
+	tx.CreatedOn = uint64(time.Now().Unix())
+	return tx
+}
+
+func TestGenesis(t *testing.T) {
+	storage := store.NewMemoryStorage("test_storage")
+	c := NewChain(storage, testDataDir)
+	c.Open(testDataDir)
+
+	gpo, _ := c.sdb.GetGpo()
 	if gpo.BlockId == "" || gpo.BlockNum != 0 || gpo.Witness != core.InitWitness || gpo.Time <= 0 {
 		t.Errorf("Gpo failed.")
 	}
@@ -21,7 +34,7 @@ func TestGenesis(t *testing.T) {
 		t.Errorf("genesis supply expected: %d, actual: %d", core.InitAmount, gpo.Supply)
 	}
 
-	accounts := statusdb.GetAccounts()
+	accounts := c.sdb.GetAccounts()
 	//fmt.Printf("account len: %d", len(accounts))
 	if len(accounts) != 1 || accounts[0].Name != core.InitWitness {
 		t.Errorf("create account fail.")
@@ -32,31 +45,33 @@ func TestGenesis(t *testing.T) {
 		t.Errorf("init account error.")
 	}
 
-	b, _ := chain.GetBlock(0)
+	b, _ := c.GetBlock(0)
 	if b.Num != 0 {
 		t.Errorf("genesis zero block not generated")
 	}
 
-	chain.Close()
-	chain.Remove()
+	c.Close()
+	c.Remove()
 }
 
 func TestGenerateBlock(t *testing.T) {
-	chain.Open(TestDataDir)
+	storage := store.NewMemoryStorage("test_storage")
+	c := NewChain(storage, testDataDir)
+	c.Open(testDataDir)
 
 	i := 0
 	countx := 20
 	for i < countx {
 		tx := CreateTestAccount(fmt.Sprintf("test_account_name_%d", i))
-		chain.AddPendingTx(tx)
+		c.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		i++
 	}
 
-	tempb := chain.GenerateBlock()
-	b, _ := chain.GetBlock(int(tempb.Num))
+	tempb := c.GenerateBlock()
+	b, _ := c.GetBlock(int(tempb.Num))
 
-	gpo, _ := statusdb.GetGpo()
+	gpo, _ := c.sdb.GetGpo()
 	if gpo.BlockNum != 1 || gpo.BlockId != b.ID {
 		t.Errorf("generate block error")
 	}
@@ -69,38 +84,40 @@ func TestGenerateBlock(t *testing.T) {
 		t.Errorf("generate block error: transactions are not right, actual: %d", len(b.Transactions))
 	}
 
-	if len(chain.GetPendingTx()) != countx-core.MaxTransactionsInBlock {
+	if len(c.GetPendingTx()) != countx-core.MaxTransactionsInBlock {
 		t.Errorf("generate block error: pending txs are not right")
 	}
 
 	i = 0
 	for i < core.MaxTransactionsInBlock {
 		accName := fmt.Sprintf("test_account_name_%d", i)
-		acc, _ := statusdb.GetAccountByName(accName)
+		acc, _ := c.sdb.GetAccountByName(accName)
 		if acc == nil || acc.Name != accName {
 			t.Errorf("cannot find account name: %s", accName)
 		}
 		i++
 	}
 
-	chain.Close()
-	chain.Remove()
+	c.Close()
+	c.Remove()
 }
 
 func TestGenerateBlocks(t *testing.T) {
-	chain.Open(TestDataDir)
+	storage := store.NewMemoryStorage("test_storage")
+	c := NewChain(storage, testDataDir)
+	c.Open(testDataDir)
 
 	i := 1
 	for i <= 20 {
 		tx := CreateTestAccount(fmt.Sprintf("test_account_name_%d", i))
-		chain.AddPendingTx(tx)
+		c.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
-		b := chain.GenerateBlock()
+		b := c.GenerateBlock()
 		if b.Num != uint64(i) {
 			t.Errorf("expected: %d, actual: %d", i, b.Num)
 		}
 
-		gpo, _ := statusdb.GetGpo()
+		gpo, _ := c.sdb.GetGpo()
 		if gpo.BlockNum != b.Num {
 			t.Errorf("gpo num expected: %d, actual: %d", 20, gpo.BlockNum)
 		}
@@ -115,7 +132,7 @@ func TestGenerateBlocks(t *testing.T) {
 		}
 
 		// TODO: validate block and previous block hash/linking
-		prevb, _ := chain.GetBlock(i - 1)
+		prevb, _ := c.GetBlock(i - 1)
 		//fmt.Printf("prevb id: %s", prevb.ID)
 		if b.PrevBlockId != prevb.ID {
 			t.Errorf("block linking is broken")
@@ -124,6 +141,6 @@ func TestGenerateBlocks(t *testing.T) {
 		i++
 	}
 
-	chain.Close()
-	chain.Remove()
+	c.Close()
+	c.Remove()
 }
