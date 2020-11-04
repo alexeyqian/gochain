@@ -15,6 +15,7 @@ const TestDataDir = "test_data"
 func SetupTestChain() *Chain {
 	storage := store.NewBoltStorage(TestDataDir)
 	c := NewChain(storage, TestDataDir)
+	fmt.Println("arrive here 2")
 	c.Open(TestDataDir)
 	return c
 }

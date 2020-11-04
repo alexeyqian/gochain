@@ -5,13 +5,10 @@ import (
 	"testing"
 
 	"github.com/alexeyqian/gochain/core"
-	"github.com/alexeyqian/gochain/store"
 )
 
 func TestGenesis(t *testing.T) {
-	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, TestDataDir)
-	c.Open(TestDataDir)
+	c := SetupTestChain()
 
 	gpo, err := c.sdb.GetGpo()
 	if err != nil {
@@ -40,21 +37,17 @@ func TestGenesis(t *testing.T) {
 		t.Errorf("genesis zero block not generated")
 	}
 
-	c.Close()
-	c.Remove()
+	TearDownTestChain(c)
 }
 
 func TestGenerateBlock(t *testing.T) {
-	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, TestDataDir)
-	c.Open(TestDataDir)
+	c := SetupTestChain()
 
 	i := 0
 	countx := 20
 	for i < countx {
 		tx := CreateTestAccount(fmt.Sprintf("test_account_name_%d", i))
 		c.AddPendingTx(tx)
-		//chain.BroadcastTx(tx)
 		i++
 	}
 
@@ -88,14 +81,11 @@ func TestGenerateBlock(t *testing.T) {
 		i++
 	}
 
-	c.Close()
-	c.Remove()
+	TearDownTestChain(c)
 }
 
 func TestGenerateBlocks(t *testing.T) {
-	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, TestDataDir)
-	c.Open(TestDataDir)
+	c := SetupTestChain()
 
 	i := 1
 	for i <= 20 {
@@ -131,6 +121,5 @@ func TestGenerateBlocks(t *testing.T) {
 		i++
 	}
 
-	c.Close()
-	c.Remove()
+	TearDownTestChain(c)
 }
