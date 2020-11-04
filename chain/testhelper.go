@@ -6,24 +6,26 @@ import (
 	"time"
 
 	"github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/ledger"
 	"github.com/alexeyqian/gochain/store"
 	"github.com/alexeyqian/gochain/utils"
 )
 
-const TestDataDir = "test_data"
+const testDataDir = "test_data"
 
 func SetupTestChain() *Chain {
-	storage := store.NewBoltStorage(TestDataDir)
-	c := NewChain(storage, TestDataDir)
+	lgr := ledger.NewFileLedger(testDataDir)
+	storage := store.NewBoltStorage(testDataDir)
+	c := NewChain(lgr, storage)
 	fmt.Println("arrive here 2")
-	c.Open(TestDataDir)
+	c.Open()
 	return c
 }
 
 func TearDownTestChain(c *Chain) {
 	c.Close()
 	c.Remove()
-	os.Remove(TestDataDir)
+	os.Remove(testDataDir)
 }
 
 func CreateTestAccount(name string) *core.CreateAccountTransaction {

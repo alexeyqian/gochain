@@ -4,7 +4,7 @@ import "os"
 
 const testDataDir = "test_data"
 
-func SetupLedger() {
+func SetupLedger() Ledger {
 	lgr := NewFileLedger(testDataDir)
 	lgr.Open()
 	return lgr

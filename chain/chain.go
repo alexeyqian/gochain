@@ -19,20 +19,20 @@ type Chain struct {
 	pendingTransactions []core.Transactioner
 }
 
-func NewChain(storage store.Storage, dir string) *Chain {
+func NewChain(lgr ledger.Ledger, storage store.Storage) *Chain {
 	return &Chain{
-		lgr:         ledger.NewLedger(),
+		lgr:         lgr,
 		sdb:         statusdb.NewStatusDB(storage),
 		isGenesised: false,
 	}
 }
 
-func (c *Chain) Open(dir string) {
+func (c *Chain) Open() {
 	// register gob
 	// TODO: move to somewhere
 	gob.Register(&core.CreateAccountTransaction{})
 
-	c.lgr.Open(dir)
+	c.lgr.Open()
 	c.sdb.Open()
 	if !c.isGenesised {
 		c.genesis()

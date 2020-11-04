@@ -26,7 +26,7 @@ type indexRecord struct {
 }
 
 type FileLedger struct {
-	folder        string
+	folder     string
 	ledgerPath string
 	indexPath  string
 	ledger     *os.File
@@ -38,7 +38,7 @@ type FileLedger struct {
 
 func NewFileLedger(dir string) *FileLedger {
 	return &FileLedger{
-		folder: dir
+		folder: dir,
 	}
 }
 
@@ -92,7 +92,7 @@ func (lg *FileLedger) Open() error {
 	return nil
 }
 
-func (lg *FileLedger) Close() error{
+func (lg *FileLedger) Close() error {
 	lg.isOpen = false
 	lg.ledger.Sync()
 	lg.ledger.Close()
