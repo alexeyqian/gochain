@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/alexeyqian/gochain/core"
@@ -108,9 +109,9 @@ func (c *Chain) GenerateBlock() *core.Block {
 	b.CreatedOn = uint64(time.Now().Unix())
 	c.movePendingTransactionsToBlock(&b)
 
-	// TODO: should gpo be updated during tx.Apply ??
+	evaluator := NewEvaluator(c.sdb)
 	for _, tx := range b.Transactions {
-		terr := tx.Apply() // gpo might be updated during tx.Apply()
+		terr := evaluator.ApplyTx(tx) // gpo might be updated during tx.Apply()
 		if terr != nil {
 			// move tx to invalid tx
 			//
@@ -125,8 +126,7 @@ func (c *Chain) GenerateBlock() *core.Block {
 	c.sdb.UpdateGpo(gpo)
 
 	// append new block to lgr
-	sb := utils.Serialize(b)
-	c.lgr.Append(sb)
+	c.lgr.Append(utils.Serialize(b))
 
 	return &b
 }
@@ -152,4 +152,11 @@ func (c *Chain) genesis() {
 	// update lgr, create a dummy block 0
 	b := core.Block{ID: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
 	c.lgr.Append(utils.Serialize(b))
+}
+
+func (c *Chain) ApplyTx(tx Transactioner) error {
+	switch reflect.TypeOf(tx) {
+	//..
+
+	}
 }
