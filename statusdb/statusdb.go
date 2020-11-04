@@ -11,24 +11,25 @@ import (
 const GpoKey = "gpo_1"
 
 const GpoBucket = "gpo"
-const GpoStateBucket = "gpostate"
 const AccountBucket = "account"
-const AccountStateBucket = "accountstate"
 const ArticleBucket = "article"
-const ArticleStateBucket = "articlestate"
 const CommentBucket = "comment"
-const CommentStateBucket = "commentstate"
 const VoteBucket = "vote"
-const VoteStateBucket = "votestate"
 
 type StatusDB struct {
 	udb *undodb.UndoableDB
 }
 
 func NewStatusDB(s store.Storage) *StatusDB {
-	return &StatusDB{
+	sdb := StatusDB{
 		udb: undodb.NewUndoableDB(s),
 	}
+	sdb.udb.CreateTable(GpoBucket)
+	sdb.udb.CreateTable(AccountBucket)
+	sdb.udb.CreateTable(ArticleBucket)
+	sdb.udb.CreateTable(CommentBucket)
+	sdb.udb.CreateTable(VoteBucket)
+	return &sdb
 }
 
 // Open has parameter MemoryStorage
@@ -56,7 +57,7 @@ func (sdb *StatusDB) UpdateGpo(e *entity.Gpo) error {
 
 func (sdb *StatusDB) GetGpo() (*entity.Gpo, error) {
 	var e entity.Gpo
-	err := sdb.getEntityByID(GpoBucket, GpoKey, e)
+	err := sdb.getEntityByID(GpoBucket, GpoKey, &e)
 	return &e, err
 }
 
@@ -72,7 +73,7 @@ func (sdb *StatusDB) UpdateAccount(e *entity.Account) error {
 
 func (sdb *StatusDB) GetAccount(id string) (*entity.Account, error) {
 	var e entity.Account
-	err := sdb.getEntityByID(AccountBucket, id, e)
+	err := sdb.getEntityByID(AccountBucket, id, &e)
 	return &e, err
 }
 
@@ -110,7 +111,7 @@ func (sdb *StatusDB) UpdateArticle(e *entity.Article) error {
 
 func (sdb *StatusDB) GetArticle(id string) (*entity.Article, error) {
 	var e entity.Article
-	err := sdb.getEntityByID(ArticleBucket, id, e)
+	err := sdb.getEntityByID(ArticleBucket, id, &e)
 	return &e, err
 }
 
@@ -136,7 +137,7 @@ func (sdb *StatusDB) UpdateComment(e *entity.Comment) error {
 
 func (sdb *StatusDB) GetComment(id string) (*entity.Comment, error) {
 	var e entity.Comment
-	err := sdb.getEntityByID(CommentBucket, id, e)
+	err := sdb.getEntityByID(CommentBucket, id, &e)
 	return &e, err
 }
 
@@ -162,7 +163,7 @@ func (sdb *StatusDB) UpdateVote(e *entity.Vote) error {
 
 func (sdb *StatusDB) GetVote(id string) (*entity.Vote, error) {
 	var e entity.Vote
-	err := sdb.getEntityByID(VoteBucket, id, e)
+	err := sdb.getEntityByID(VoteBucket, id, &e)
 	return &e, err
 }
 
@@ -181,7 +182,6 @@ func (sdb *StatusDB) createEntity(bucket string, e entity.Entity) error {
 	if !entity.HasID(e) {
 		return fmt.Errorf("create: entity doesn't have ID")
 	}
-
 	return sdb.udb.Create(bucket, entity.GetID(e), entity.Serialize(e))
 }
 
@@ -198,7 +198,6 @@ func (sdb *StatusDB) getEntityByID(bucket, key string, e entity.Entity) error {
 	if err != nil {
 		return err
 	}
-
 	entity.Deserialize(e, data)
 	return nil
 }

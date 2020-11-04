@@ -23,7 +23,7 @@ func (tx *VoteTransaction) Apply(sdb *statusdb.StatusDB) error {
 	vote.ParentType = tx.ParentType
 	vote.Direction = tx.Direction
 	vote.VotePower = tx.VotePower
-	sdb.AddVote(&vote)
+	sdb.CreateVote(&vote)
 
 	if vote.ParentType == VoteParentTypeAccount {
 		account, _ := sdb.GetAccount(vote.ParentId)
@@ -36,7 +36,7 @@ func (tx *VoteTransaction) Apply(sdb *statusdb.StatusDB) error {
 			account.VotePower -= vote.VotePower
 		}
 
-		c.sdb.UpdateAccount(account)
+		sdb.UpdateAccount(account)
 
 	} else if vote.ParentType == VoteParentTypeArticle {
 		article, _ := sdb.GetArticle(vote.ParentId)

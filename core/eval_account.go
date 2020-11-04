@@ -23,7 +23,7 @@ func (tx *CreateAccountTransaction) Apply(sdb *statusdb.StatusDB) error {
 	var acc entity.Account
 	acc.ID = tx.AccountId
 	acc.Name = tx.AccountName
-	sdb.AddAccount(&acc)
+	sdb.CreateAccount(&acc)
 
 	return nil
 }

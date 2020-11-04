@@ -21,9 +21,9 @@ func (tx *CreateArticleTransaction) Apply(sdb *statusdb.StatusDB) error {
 	article.Title = tx.Title
 	article.Body = tx.Body
 	article.Meta = tx.Meta
-	sdb.AddArticle(&article)
+	sdb.CreateArticle(&article)
 
-	acc, _ := c.sdb.GetAccountByName(tx.Author)
+	acc, _ := sdb.GetAccountByName(tx.Author)
 	acc.ArticleCount += 1
 	// TODO: check error
 	sdb.UpdateAccount(acc)

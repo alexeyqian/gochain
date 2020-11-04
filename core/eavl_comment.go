@@ -21,7 +21,7 @@ func (tx *CreateCommentTransaction) Apply(sdb *statusdb.StatusDB) error {
 	comment.Commentor = tx.Commentor
 	comment.Body = tx.Body
 	comment.CreatedOn = tx.CreatedOn
-	sdb.AddComment(&comment)
+	sdb.CreateComment(&comment)
 
 	return nil
 }

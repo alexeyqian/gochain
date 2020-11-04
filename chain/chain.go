@@ -1,7 +1,7 @@
 package chain
 
 import (
-	"reflect"
+	"encoding/gob"
 	"time"
 
 	"github.com/alexeyqian/gochain/core"
@@ -28,6 +28,10 @@ func NewChain(storage store.Storage, dir string) *Chain {
 }
 
 func (c *Chain) Open(dir string) {
+	// register gob
+	// TODO: move to somewhere
+	gob.Register(&core.CreateAccountTransaction{})
+
 	c.lgr.Open(dir)
 	c.sdb.Open()
 	if !c.isGenesised {
@@ -54,7 +58,7 @@ func (c *Chain) GetBlock(num int) (*core.Block, error) {
 	}
 	var b core.Block
 	utils.Deserialize(&b, bdata)
-	return &b
+	return &b, nil
 }
 
 // TODO: move to node
@@ -90,7 +94,7 @@ func (c *Chain) movePendingTransactionsToBlock(b *core.Block) {
 }
 
 func (c *Chain) AddPendingTx(tx core.Transactioner) error {
-	err := tx.Validate()
+	err := tx.Validate(c.sdb)
 	if err == nil {
 		c.pendingTransactions = append(c.pendingTransactions, tx)
 	}
@@ -109,7 +113,6 @@ func (c *Chain) GenerateBlock() *core.Block {
 	b.CreatedOn = uint64(time.Now().Unix())
 	c.movePendingTransactionsToBlock(&b)
 
-	evaluator := NewEvaluator(c.sdb)
 	for _, tx := range b.Transactions {
 		err := tx.Apply(c.sdb) // gpo might be updated during tx.Apply()
 		if err != nil {
@@ -125,6 +128,7 @@ func (c *Chain) GenerateBlock() *core.Block {
 	gpo.Supply += core.AmountPerBlock
 	c.sdb.UpdateGpo(gpo)
 
+	//fmt.Printf("arrive here: %+v", b)
 	// append new block to lgr
 	c.lgr.Append(utils.Serialize(b))
 
@@ -132,31 +136,30 @@ func (c *Chain) GenerateBlock() *core.Block {
 }
 
 func (c *Chain) genesis() {
+
 	// update global status
 	var gpo entity.Gpo
+	gpo.ID = statusdb.GpoKey
 	gpo.BlockId = core.BlockZeroId
 	gpo.BlockNum = 0
 	gpo.Witness = core.InitWitness
 	gpo.Time = core.GenesisTime
 	gpo.Supply = core.InitAmount
-	c.sdb.AddGpo(&gpo)
+	//fmt.Printf("creating gpo: %+v", gpo)
+	c.sdb.CreateGpo(&gpo)
 
 	// update chain database
 	var acc entity.Account
-	acc.ID = utils.CreateUuid() // should be public key string
+	acc.ID = utils.CreateUuid() // TODO: should be public key string
 	acc.Name = core.InitWitness
 	acc.CreatedOn = core.GenesisTime
 	acc.Coin = core.InitAmount
-	c.sdb.AddAccount(&acc)
+	err := c.sdb.CreateAccount(&acc)
+	if err != nil {
+		panic(err)
+	}
 
 	// update lgr, create a dummy block 0
 	b := core.Block{ID: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
 	c.lgr.Append(utils.Serialize(b))
-}
-
-func (c *Chain) ApplyTx(tx Transactioner) error {
-	switch reflect.TypeOf(tx) {
-	//..
-
-	}
 }

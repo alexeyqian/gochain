@@ -10,6 +10,7 @@ type Entity interface {
 }
 
 type Gpo struct {
+	ID       string
 	BlockId  string
 	BlockNum uint64
 	Witness  string
@@ -69,11 +70,12 @@ type Vote struct {
 }
 
 func HasID(e Entity) bool {
-	return reflect.ValueOf(e).Elem().FieldByName("ID").String() != ""
+	//fmt.Printf("reflect %+v", reflect.ValueOf(e).Elem())
+	return reflect.ValueOf(e).FieldByName("ID").String() != ""
 }
 
 func GetID(e Entity) string {
-	return reflect.ValueOf(e).Elem().FieldByName("ID").String()
+	return reflect.ValueOf(e).FieldByName("ID").String()
 }
 
 func Serialize(e Entity) []byte {

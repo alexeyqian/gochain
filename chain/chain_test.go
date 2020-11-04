@@ -12,12 +12,12 @@ import (
 
 const testDataDir = "test_data"
 
-func CreateTestAccount(name string) core.Transactioner {
+func CreateTestAccount(name string) *core.CreateAccountTransaction {
 	var tx core.CreateAccountTransaction
 	tx.AccountId = utils.CreateUuid()
 	tx.AccountName = name
 	tx.CreatedOn = uint64(time.Now().Unix())
-	return tx
+	return &tx
 }
 
 func TestGenesis(t *testing.T) {
@@ -25,17 +25,19 @@ func TestGenesis(t *testing.T) {
 	c := NewChain(storage, testDataDir)
 	c.Open(testDataDir)
 
-	gpo, _ := c.sdb.GetGpo()
+	gpo, err := c.sdb.GetGpo()
+	if err != nil {
+		panic(err)
+	}
 	if gpo.BlockId == "" || gpo.BlockNum != 0 || gpo.Witness != core.InitWitness || gpo.Time <= 0 {
 		t.Errorf("Gpo failed.")
 	}
-
 	if gpo.Supply != core.InitAmount {
 		t.Errorf("genesis supply expected: %d, actual: %d", core.InitAmount, gpo.Supply)
 	}
 
 	accounts := c.sdb.GetAccounts()
-	//fmt.Printf("account len: %d", len(accounts))
+	fmt.Printf("account len: %d", len(accounts))
 	if len(accounts) != 1 || accounts[0].Name != core.InitWitness {
 		t.Errorf("create account fail.")
 	}

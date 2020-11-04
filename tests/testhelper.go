@@ -12,6 +12,18 @@ import (
 
 const TestDataDir = "data"
 
+func SetupTestChain() *chain.Chan{
+	storage := store.NewBoltStorage(TestDataDir)
+	c := chain.NewChain(storage, TestDataDir)
+	c.Open(TestDataDir)
+	return c
+}
+
+func TearDownTestChain(c *chain.Chain){
+	c.Close()
+	c.Remove()
+}
+
 func CreateTestAccount(name string) core.Transactioner {
 	var tx core.CreateAccountTransaction
 	tx.AccountId = utils.CreateUuid()

@@ -10,12 +10,14 @@ import (
 	"log"
 	"math/big"
 	"reflect"
+
+	"github.com/alexeyqian/gochain/statusdb"
 )
 
 type Transactioner interface {
-	Apply() error
-	Validate() error
-	// QuickValidate() error
+	Apply(sdb *statusdb.StatusDB) error
+	Validate(sdb *statusdb.StatusDB) error
+	// QuickValidate(sdb *statusdb.StatusDB) error
 }
 
 // GetRawTransaction

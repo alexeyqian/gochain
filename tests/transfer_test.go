@@ -9,44 +9,42 @@ import (
 )
 
 func TestCreateAccount(t *testing.T) {
-	chain.Open(TestDataDir)
+	c := SetupTestChain()
 
-	chain.AddPendingTx(CreateTestAccount("alice"))
-	chain.GenerateBlock()
+	c.AddPendingTx(CreateTestAccount("alice"))
+	c.GenerateBlock()
 
-	acc, _ := statusdb.GetAccountByName("alice")
+	acc, _ := c.sdb.GetAccountByName("alice")
 	if acc.Name != "alice" {
 		t.Errorf("create account faile")
 	}
 
-	chain.Close()
-	chain.Remove()
+	TearDownTestChain(c)
 }
 
 func TestTransfer(t *testing.T) {
-	chain.Open(TestDataDir)
+	c := SetupTestChain()
 
-	chain.AddPendingTx(CreateTestAccount("alice"))
-	chain.GenerateBlock()
+	c.AddPendingTx(CreateTestAccount("alice"))
+	c.GenerateBlock()
 
 	var tx core.TransferCoinTransaction
 	tx.From = "init"
 	tx.To = "alice"
 	tx.Amount = 100
-	chain.AddPendingTx(tx)
-	chain.GenerateBlock()
+	c.AddPendingTx(tx)
+	c.GenerateBlock()
 
 	acc, _ := statusdb.GetAccountByName("alice")
 	if acc.Coin != 100 {
 		t.Errorf("expected: %d, actual: %d", 100, acc.Coin)
 	}
 
-	chain.Close()
-	chain.Remove()
+	TearDownTestChain(c)
 }
 
 func TestInvalidTxWillBeIgnored(t *testing.T) {
-	chain.Open(TestDataDir)
+	c := SetupTestChain()
 
 	var tx core.CreateAccountTransaction
 	tx.AccountName = ""
@@ -60,12 +58,11 @@ func TestInvalidTxWillBeIgnored(t *testing.T) {
 		t.Errorf("should not add invalid tx to pending tx list")
 	}
 
-	chain.Close()
-	chain.Remove()
+	TearDownTestChain(c)
 }
 
 func TestTransferNoSufficientFund(t *testing.T) {
-	chain.Open(TestDataDir)
+	c := SetupTestChain()
 
 	chain.AddPendingTx(CreateTestAccount("alice"))
 	chain.GenerateBlock()
@@ -90,6 +87,5 @@ func TestTransferNoSufficientFund(t *testing.T) {
 		t.Errorf("expected: %d, actual: %d", 0, accAlice.Coin)
 	}
 
-	chain.Close()
-	chain.Remove()
+	TearDownTestChain(c)
 }
