@@ -1,9 +1,8 @@
-package tests
+package chain
 
 import (
 	"testing"
 
-	"github.com/alexeyqian/gochain/chain"
 	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/statusdb"
 )
