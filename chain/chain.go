@@ -13,7 +13,7 @@ import (
 )
 
 type Chain struct {
-	lgr                 *ledger.Ledger
+	lgr                 ledger.Ledger
 	sdb                 *statusdb.StatusDB
 	isGenesised         bool
 	pendingTransactions []core.Transactioner
@@ -31,6 +31,10 @@ func (c *Chain) Open() {
 	// register gob
 	// TODO: move to somewhere
 	gob.Register(&core.CreateAccountTransaction{})
+	gob.Register(&core.CreateArticleTransaction{})
+	gob.Register(&core.CreateCommentTransaction{})
+	gob.Register(&core.TransferCoinTransaction{})
+	gob.Register(&core.VoteTransaction{})
 
 	c.lgr.Open()
 	c.sdb.Open()

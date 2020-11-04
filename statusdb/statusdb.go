@@ -24,17 +24,20 @@ func NewStatusDB(s store.Storage) *StatusDB {
 	sdb := StatusDB{
 		udb: undodb.NewUndoableDB(s),
 	}
-	sdb.udb.CreateTable(GpoBucket)
-	sdb.udb.CreateTable(AccountBucket)
-	sdb.udb.CreateTable(ArticleBucket)
-	sdb.udb.CreateTable(CommentBucket)
-	sdb.udb.CreateTable(VoteBucket)
+
 	return &sdb
 }
 
 // Open has parameter MemoryStorage
 func (sdb *StatusDB) Open() {
-	sdb.udb.Open()
+	sdb.udb.Open() // after open, the folder and file should be created
+	if !sdb.udb.HasTable(GpoBucket) {
+		sdb.udb.CreateTable(GpoBucket)
+		sdb.udb.CreateTable(AccountBucket)
+		sdb.udb.CreateTable(ArticleBucket)
+		sdb.udb.CreateTable(CommentBucket)
+		sdb.udb.CreateTable(VoteBucket)
+	}
 }
 
 func (sdb *StatusDB) Close() {

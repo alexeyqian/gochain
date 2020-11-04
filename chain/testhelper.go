@@ -3,6 +3,7 @@ package chain
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/alexeyqian/gochain/core"
@@ -12,12 +13,13 @@ import (
 )
 
 const testDataDir = "test_data"
+const testStatusDBFile = "status.db"
 
 func SetupTestChain() *Chain {
 	lgr := ledger.NewFileLedger(testDataDir)
-	storage := store.NewBoltStorage(testDataDir)
+	storage := store.NewBoltStorage(filepath.Join(testDataDir, testStatusDBFile))
 	c := NewChain(lgr, storage)
-	fmt.Println("arrive here 2")
+
 	c.Open()
 	return c
 }
