@@ -3,27 +3,15 @@ package chain
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/store"
-	"github.com/alexeyqian/gochain/utils"
 )
-
-const testDataDir = "test_data"
-
-func CreateTestAccount(name string) *core.CreateAccountTransaction {
-	var tx core.CreateAccountTransaction
-	tx.AccountId = utils.CreateUuid()
-	tx.AccountName = name
-	tx.CreatedOn = uint64(time.Now().Unix())
-	return &tx
-}
 
 func TestGenesis(t *testing.T) {
 	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, testDataDir)
-	c.Open(testDataDir)
+	c := NewChain(storage, TestDataDir)
+	c.Open(TestDataDir)
 
 	gpo, err := c.sdb.GetGpo()
 	if err != nil {
@@ -58,8 +46,8 @@ func TestGenesis(t *testing.T) {
 
 func TestGenerateBlock(t *testing.T) {
 	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, testDataDir)
-	c.Open(testDataDir)
+	c := NewChain(storage, TestDataDir)
+	c.Open(TestDataDir)
 
 	i := 0
 	countx := 20
@@ -106,8 +94,8 @@ func TestGenerateBlock(t *testing.T) {
 
 func TestGenerateBlocks(t *testing.T) {
 	storage := store.NewMemoryStorage("test_storage")
-	c := NewChain(storage, testDataDir)
-	c.Open(testDataDir)
+	c := NewChain(storage, TestDataDir)
+	c.Open(TestDataDir)
 
 	i := 1
 	for i <= 20 {
