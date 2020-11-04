@@ -3,16 +3,16 @@ package core
 import (
 	"errors"
 
-	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
+	"github.com/alexeyqian/gochain/statusdb"
 )
 
-func (c *Chain) ValidateVote(tx core.VoteTransaction) error {
+func (tx *VoteTransaction) Validate(sdb *statusdb.StatusDB) error {
 	return nil
 }
 
-func (c *Chain) ApplyVote(tx *core.VoteTransaction) error {
-	err := tx.Validate()
+func (tx *VoteTransaction) Apply(sdb *statusdb.StatusDB) error {
+	err := tx.Validate(sdb)
 	if err != nil {
 		return err
 	}
@@ -23,10 +23,10 @@ func (c *Chain) ApplyVote(tx *core.VoteTransaction) error {
 	vote.ParentType = tx.ParentType
 	vote.Direction = tx.Direction
 	vote.VotePower = tx.VotePower
-	c.sdb.AddVote(&vote)
+	sdb.AddVote(&vote)
 
 	if vote.ParentType == VoteParentTypeAccount {
-		account, _ := c.sdb.GetAccount(vote.ParentId)
+		account, _ := sdb.GetAccount(vote.ParentId)
 
 		if vote.Direction > 0 {
 			account.UpVotes += 1
@@ -39,7 +39,7 @@ func (c *Chain) ApplyVote(tx *core.VoteTransaction) error {
 		c.sdb.UpdateAccount(account)
 
 	} else if vote.ParentType == VoteParentTypeArticle {
-		article, _ := c.sdb.GetArticle(vote.ParentId)
+		article, _ := sdb.GetArticle(vote.ParentId)
 		if article == nil {
 			return errors.New("vote articel not exist")
 		}
@@ -50,10 +50,10 @@ func (c *Chain) ApplyVote(tx *core.VoteTransaction) error {
 			article.DownVotes += 1
 			article.VotePower -= vote.VotePower
 		}
-		c.sdb.UpdateArticle(article)
+		sdb.UpdateArticle(article)
 
 	} else if vote.ParentType == VoteParentTypeComment {
-		comment, _ := c.sdb.GetComment(vote.ParentId)
+		comment, _ := sdb.GetComment(vote.ParentId)
 
 		if vote.Direction > 0 {
 			comment.UpVotes += 1
@@ -63,7 +63,7 @@ func (c *Chain) ApplyVote(tx *core.VoteTransaction) error {
 			comment.VotePower -= vote.VotePower
 		}
 
-		c.sdb.UpdateComment(comment)
+		sdb.UpdateComment(comment)
 	}
 
 	return nil

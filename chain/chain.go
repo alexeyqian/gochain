@@ -111,8 +111,8 @@ func (c *Chain) GenerateBlock() *core.Block {
 
 	evaluator := NewEvaluator(c.sdb)
 	for _, tx := range b.Transactions {
-		terr := evaluator.ApplyTx(tx) // gpo might be updated during tx.Apply()
-		if terr != nil {
+		err := tx.Apply(c.sdb) // gpo might be updated during tx.Apply()
+		if err != nil {
 			// move tx to invalid tx
 			//
 		}
