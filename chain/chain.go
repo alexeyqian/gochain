@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"time"
 
+	"github.com/alexeyqian/gochain/config"
 	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
 	"github.com/alexeyqian/gochain/ledger"
@@ -151,6 +152,11 @@ func (c *Chain) genesis() {
 	gpo.Supply = core.InitAmount
 	//fmt.Printf("creating gpo: %+v", gpo)
 	c.sdb.CreateGpo(&gpo)
+
+	var wso entity.Wso
+	wso.MaxBlockSize = config.DefaultBlockSize
+	wso.AccountCreationFee = config.DefaultAccountCreationFee
+	c.sdb.CreateWso(&wso)
 
 	// update chain database
 	var acc entity.Account

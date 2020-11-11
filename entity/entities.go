@@ -19,9 +19,19 @@ type Gpo struct {
 	Supply   uint64
 }
 
+type Wso struct {
+	ID                 string
+	MajorVersion       int
+	MaxBlockSize       int
+	AccountCreationFee int
+	CurrentWitnesses   []string
+}
+
 type Witness struct {
-	ID   string
-	Name string
+	ID      string
+	Name    string
+	Votes   int
+	Version int
 }
 
 type Account struct {
