@@ -11,26 +11,24 @@ import (
 )
 
 type Selector struct {
-	sdb statusdb.StatusDB
+	sdb *statusdb.StatusDB
 }
 
-func NewSelector(db statusdb.StatusDB) *Selector {
+func NewSelector(db *statusdb.StatusDB) *Selector {
 	return &Selector{
 		sdb: db,
 	}
 }
 
 func (s *Selector) GetNextWitness() entity.Witness {
+	headBlockNumber := s.sdb.HeadBlockNumber()
 	// only happends at beginning of each round
-	if isNewRound(s.sdb.HeadBlockNumber()) {
+	if isNewRound(headBlockNumber) {
 		updateWitnessSchedule(s.sdb)
 	}
 
-	absolute_slot := time.Now().Unix() - config.GenesisTime
-	// TODO: process if not able to be divided by 3 (interval)
-	absolute_slot = absolute_slot / config.BlockInterval
-	wso := sdb.GetWso()
-	return wso.currentWitnesses[absolute_slot%len(wso.currentWitnesses)]
+	wso, _ := s.sdb.GetWso()
+	return wso.currentWitnesses[headBlockNumber%len(wso.currentWitnesses)]
 }
 
 func isNewRound(blockNumber uint64) bool {

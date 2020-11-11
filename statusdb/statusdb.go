@@ -13,6 +13,8 @@ const WsoKey = "wso_1"
 
 const GpoBucket = "gpo"
 const WsoBucket = "wso"
+const SoftForkLinkedBucket = "softforklinked"
+const SoftForkUnlinkedBucket = "softforkunlinked"
 const AccountBucket = "account"
 const WitnessBucket = "witness"
 const ArticleBucket = "article"
@@ -41,6 +43,8 @@ func (sdb *StatusDB) Open() {
 		sdb.udb.CreateTable(ArticleBucket)
 		sdb.udb.CreateTable(CommentBucket)
 		sdb.udb.CreateTable(VoteBucket)
+		sdb.udb.CreateTable(SoftForkLinkedBucket)
+		sdb.udb.CreateTable(SoftForkUnlinkedBucket)
 	}
 }
 

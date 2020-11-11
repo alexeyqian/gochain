@@ -27,6 +27,12 @@ type Wso struct {
 	CurrentWitnesses   []string
 }
 
+type SoftForkItem struct {
+	ID      string
+	PrevID  string
+	BlockId string
+}
+
 type Witness struct {
 	ID      string
 	Name    string
