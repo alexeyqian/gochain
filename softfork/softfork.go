@@ -29,10 +29,6 @@ func NewSoftFork(b core.Block, db *statusdb.StatusDB) *SoftFork {
 	return &fork
 }
 
-func (fork *SoftFork) reset() {
-	fork.sdb.TruncateSoftFork()
-}
-
 // multiple branches are stored in same table
 // push a block into linked table if it can be linked to one of the branches in the table
 // and also move head to biggest block num if larger than current num
@@ -76,18 +72,4 @@ func (fork *SoftFork) PopBlock() {
 	// check if it's still the longest branch?
 
 	fork.Head = item.PrevBlockID
-}
-
-// might have multiple blocks with same block num
-func (fork *SoftFork) FetchBlocksByNumber(num uint64) []*core.Block {
-	var blocks []*core.Block
-
-	allItems := fork.sdb.GetSoftForkItems()
-	for _, item := range allItems {
-		if item.BlockNum == num {
-			tempB, _ := core.UnSerializeBlock(item.BlockData)
-			blocks = append(blocks, tempB)
-		}
-	}
-	return blocks
 }
