@@ -43,6 +43,9 @@ func (fdb *ForkDB) Open() error {
 			return err
 		}
 	}
+
+	// TODO: set last irreversible block as head ...
+
 	return nil
 }
 

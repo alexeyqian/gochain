@@ -1,11 +1,12 @@
 package chain
 
+import "github.com/alexeyqian/gochain/forkdb"
 
 // This happens when two witness nodes are using same account
-func maybeWarnMultipleProduction(fork *softfork.SoftFork, uint64 blockNumber ){
-	blocks := fork.FetchBlocksByNumber( blockNumber )
+func maybeWarnMultipleProduction(fdb *forkdb.ForkDB, uint64 blockNumber ){
+	blocks := fdb.FetchBlocksByNumber( blockNumber )
 	if len(blocks) <= 1 {
-	return // pass the check
+		return // pass the check
  	}
  
  	fmt.Printf("Encontered block num collision at block %d\n", blockNumber)
@@ -17,13 +18,14 @@ func maybeWarnMultipleProduction(fork *softfork.SoftFork, uint64 blockNumber ){
 // the return value indicates if branch switch happens
 func (c *Chain) PushBlock(b core.Block) bool {
  // softfork.PushBlock will return the head block of current longest chain in softfork.
- newHead := c.softfork.PushBlock(b)
+ c.fdb.PushBlock(b)
+ newHead := c.fdb.Head()
  
  c.maybeWarnMultipleProduction(c.fork, b.Num)
 
  //If the head block from the longest chain does not build off of the current head,
  // then we need to switch to new branch.
- if newHead.PreviousBlockID != c.HeadBlock().ID {
+ if newHead.PreviousBlockID != c.Head().ID {
 	 //If the newly pushed block is the same height as head, we get head back in newHead
 	 //Only switch forks if newHead is actually higher than headblock
 	 if newHead.BlockNumber <= c.HeadBlock().BlockNumber() {

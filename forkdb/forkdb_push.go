@@ -12,8 +12,8 @@ import (
 // after adding to linked table, the head will updated to point to longest branch if necessary
 func (fdb *ForkDB) PushBlock(b *core.Block) error {
 	// validate block before push, expired, max_depth of fork
-	if b.BlockNum-fdb.Head().BlockNum > maxBranchingDepth {
-		panic("reach max branching depth, head: %d, current: %d", fdb.Head().BlockNum, b.BlockNum)
+	if b.Num-fdb.Head().Num > maxBranchingDepth {
+		panic("reach max branching depth, head: %d, current: %d", fdb.Head().Num, b.Num)
 	}
 
 	// check duplication of BlockID before insert
@@ -36,6 +36,27 @@ func (fdb *ForkDB) PushBlock(b *core.Block) error {
 	}
 
 	return nil
+}
+
+// forkdb should always have at lease one item,
+// every time the database opens, it will starts with the last irriversable block.
+// forkdb pop block is  part prcess of chain's pop block
+func (fdb *ForkDB) PopBlock() {
+	var err error
+	_, err = fdb.GetBlock(fdb.Head().ID)
+	if err != nil {
+		panic(fmt.Sprintf("cannot find the fork db item: %s", fdb.Head().ID))
+	}
+
+	// TODO: remove previous head block
+	// check if it's still the longest branch?
+
+	var prev *core.Block
+	prev, err = fdb.GetBlock(fdb.Head().PrevBlockId)
+	if err != nil {
+		panic(fmt.Sprintf("cannot find the ford db item: %s", fdb.Head().PrevBlockId))
+	}
+	fdb.SetHead(prev)
 }
 
 func (fdb *ForkDB) linkable(b *core.Block) bool {
