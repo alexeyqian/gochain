@@ -1,10 +1,14 @@
 package forkdb
 
 import (
+	"fmt"
+
 	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/entity"
 	"github.com/alexeyqian/gochain/store"
 )
+
+const maxBranchingDepth = 100
 
 const metaTable = "_forkmeta_"
 const metaKey = "_forkmeta_key_"
@@ -96,4 +100,21 @@ func (fdb *ForkDB) GetBlocks() []*core.Block {
 		res = append(res, &e)
 	}
 	return res
+}
+
+func (fdb *ForkDB) GetBlock(id string) (*core.Block, error) {
+	data, err := fdb.store.Get(branchTable, []byte(id))
+	if err != nil {
+		return nil, err
+	}
+	var e core.Block
+	entity.Deserialize(&e, data)
+	return &e, nil
+}
+
+func (fdb *ForkDB) CreateBlock(e *core.Block) error {
+	if !entity.HasID(e) {
+		return fmt.Errorf("create: entity doesn't have ID")
+	}
+	return fdb.store.Put(branchTable, []byte(entity.GetID(e)), entity.Serialize(e))
 }
