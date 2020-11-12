@@ -20,7 +20,6 @@ type Block struct {
 	nonce        uint64
 	Transactions []Transactioner
 	//Size         uint64  ??
-
 }
 
 func (b *Block) SerializeBlockWitoutId() []byte {

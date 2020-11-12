@@ -57,10 +57,10 @@ type Storage interface {
 	HasBucket(bucket string) bool
 	RowCount(bucket string) int
 
-	/* NOT USED
+	/*
 	 * delete a bucket, if not exist, do nothing
 	 */
-	//DeleteBucket(bucket string) error
+	DeleteBucket(bucket string) error
 }
 
 func IntKeyToBytes(key uint64) []byte {

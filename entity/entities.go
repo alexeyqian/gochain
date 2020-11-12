@@ -28,9 +28,10 @@ type Wso struct {
 }
 
 type SoftForkItem struct {
-	ID      string
-	PrevID  string
-	BlockId string
+	ID          string
+	BlockNum    uint64
+	BlockData   []byte
+	PrevBlockID string
 }
 
 type Witness struct {

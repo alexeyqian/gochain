@@ -10,6 +10,10 @@ func (udb *UndoableDB) CreateTable(name string) error {
 	return udb.store.CreateBucket(name)
 }
 
+func (udb *UndoableDB) DeleteTable(name string) error {
+	return udb.store.DeleteBucket(name)
+}
+
 func (udb *UndoableDB) HasTable(name string) bool {
 	if name == "" {
 		return false

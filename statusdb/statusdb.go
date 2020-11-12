@@ -13,8 +13,7 @@ const WsoKey = "wso_1"
 
 const GpoBucket = "gpo"
 const WsoBucket = "wso"
-const SoftForkLinkedBucket = "softforklinked"
-const SoftForkUnlinkedBucket = "softforkunlinked"
+const SoftForkBucket = "softfork"
 const AccountBucket = "account"
 const WitnessBucket = "witness"
 const ArticleBucket = "article"
@@ -43,8 +42,7 @@ func (sdb *StatusDB) Open() {
 		sdb.udb.CreateTable(ArticleBucket)
 		sdb.udb.CreateTable(CommentBucket)
 		sdb.udb.CreateTable(VoteBucket)
-		sdb.udb.CreateTable(SoftForkLinkedBucket)
-		sdb.udb.CreateTable(SoftForkUnlinkedBucket)
+		sdb.udb.CreateTable(SoftForkBucket)
 	}
 }
 
@@ -54,6 +52,11 @@ func (sdb *StatusDB) Close() {
 
 func (sdb *StatusDB) Remove() {
 	sdb.udb.Remove()
+}
+
+func (sdb *StatusDB) Truncate(table string) {
+	sdb.udb.DeleteTable(table)
+	sdb.udb.CreateTable(table)
 }
 
 // =========== gpo ================
@@ -240,6 +243,36 @@ func (sdb *StatusDB) GetVotes() []*entity.Vote {
 		res = append(res, &e)
 	}
 	return res
+}
+
+// =========== softforkitem ================
+
+func (sdb *StatusDB) CreateSoftForkItem(e *entity.SoftForkItem) error {
+	return sdb.createEntity(SoftForkBucket, *e)
+}
+
+func (sdb *StatusDB) UpdateSoftForkItem(e *entity.SoftForkItem) error {
+	return sdb.updateEntity(SoftForkBucket, *e)
+}
+
+func (sdb *StatusDB) GetSoftForkItem(id string) (*entity.SoftForkItem, error) {
+	var e entity.Vote
+	err := sdb.getEntityByID(SoftForkBucket, id, &e)
+	return &e, err
+}
+
+func (sdb *StatusDB) GetSoftForkItems() []*entity.SoftForkItem {
+	var res []*entity.SoftForkItem
+	for _, value := range sdb.getAll(SoftForkBucket) {
+		var e entity.SoftForkItem
+		entity.Deserialize(&e, value)
+		res = append(res, &e)
+	}
+	return res
+}
+
+func (sdb *StatusDB) TruncateSoftFork() {
+	sdb.Truncate(SoftForkBucket)
 }
 
 // ============ internel functions ==============

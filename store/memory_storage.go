@@ -109,6 +109,11 @@ func (s *MemoryStorage) CreateBucket(bucket string) error {
 	return nil
 }
 
+func (s *MemoryStorage) DeleteBucket(bucket string) error {
+	s.buckets[bucket] = nil
+	return nil
+}
+
 func (s *MemoryStorage) RowCount(bucket string) int {
 	if !s.HasBucket(bucket) {
 		return 0

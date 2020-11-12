@@ -178,6 +178,19 @@ func (s *BoltStorage) CreateBucket(bucket string) error {
 	return err
 }
 
+func (s *BoltStorage) DeleteBucket(bucket string) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b != nil {
+			tx.DeleteBucket([]byte(bucket))
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 func (s *BoltStorage) RowCount(bucket string) int {
 	count := 0
 	err := s.db.View(func(tx *bolt.Tx) error {
