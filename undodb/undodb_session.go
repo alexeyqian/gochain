@@ -38,6 +38,9 @@ func (udb *UndoableDB) UndoLastSession() {
 		panic("undo session error, revision should be greater then 0")
 	}
 
+	// avoid record oepration logs during undo
+	udb.isUndoing = true
+
 	revisions := udb.getAllRevisions(meta.Revision)
 
 	// sort map by key(uint64) in reverse order
@@ -55,6 +58,8 @@ func (udb *UndoableDB) UndoLastSession() {
 
 	meta.Revision--
 	udb.updateMetaData(meta)
+
+	udb.isUndoing = false
 }
 
 func (udb *UndoableDB) CommitLastSession() {
@@ -108,6 +113,12 @@ func (udb *UndoableDB) getAllRevisions(num uint32) map[uint64]Revision {
 }
 
 func (udb *UndoableDB) saveRevision(table, key string, data []byte, operation string) error {
+	// avoiding create operation logs during undoing
+	// otherwise it will create operation for undo's undo
+	if udb.isUndoing { 
+		return nil
+	}
+
 	num := udb.getCurrentRevision()
 	if num == 0 { // no undo session
 		return nil

@@ -21,6 +21,15 @@ func (c *Chain) Head() *core.Block {
 	return c.cachedHead
 }
 
+func (c *Chain) ReloadHead() {
+	gpo, _ := c.sdb.GetGpo()
+	b, err := c.GetBlockByNumber(gpo.BlockID)
+	if err != nil {
+		panic("chain: cannot find the head block")
+	}
+	c.cachedHead = b
+}
+
 func (c *Chain) SetHead(b *core.Block) {
 	gpo, _ := c.sdb.GetGpo()
 	gpo.BlockID = b.ID

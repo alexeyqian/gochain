@@ -1,7 +1,7 @@
 package chain
 
 
-func (c *Chain) swithBranch(newHead *core.Block){
+func (c *Chain) switchBranch(newHead *core.Block){
 	// if the newly pushed block is the same height as head, nothing need to be done.
 	// only switch forks if newHead is actually higher than headblock
 	if newHead.BlockNumber <= c.HeadBlockNumber() {
@@ -17,10 +17,13 @@ func (c *Chain) swithBranch(newHead *core.Block){
 	branch1, branch2 = c.fdb.FetchBranchFrom(newHead.BlockID, c.HeadBlockID)
 	commonAncestorBlockID := branch2[len(branch2) - 1].PreviousBlockID // also = branch1[len(branch1) - 1].PreviousBlockID
 	
-	// undo applied blocks of short branch2 until we hit the commen ancestor block of these two branches
-	for c.HeadBlockID() != commonAncestorBlockID {
-		c.PopBlock() // need to map revison id and block id
-		c.UndoAppliedBlock(b)
+	// undo applied blocks of short branch2 (= current main branch) 
+	// until we hit the commen ancestor block of these two branches
+	for c.Head().ID != commonAncestorBlockID {
+		// undo will restore gpo and gpo.blockid(chain head) to previous block
+		// each undo will undo exactly one block (current head block)
+		c.undo() 
+		c.ReloadHead() // reset head to previous block id
 		// TODO: append popped tx
 		//c._popped_tx.insert( _self._popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end() );
 	}
