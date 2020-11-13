@@ -17,15 +17,12 @@ func (c *Chain) swithBranch(newHead *core.Block){
 	branch1, branch2 = c.fdb.FetchBranchFrom(newHead.BlockID, c.HeadBlockID)
 	commonAncestorBlockID := branch2[len(branch2) - 1].PreviousBlockID // also = branch1[len(branch1) - 1].PreviousBlockID
 	
-	// set forkdb head to short branch temporarily for popping, will set back to new header later
-	c.fdb.SetHead(branch1[0])
-
-	// pop blocks until we hit the commen ancestor block of these two branches
-	// abandon blocks on shorter branch	 
+	// undo applied blocks of short branch2 until we hit the commen ancestor block of these two branches
 	for c.HeadBlockID() != commonAncestorBlockID {
-		// pop block from fork db, undo db operations, 
-		// and pop transactions into poped transactions list.
-		c.PopBlock() 		
+		c.PopBlock() // need to map revison id and block id
+		c.UndoAppliedBlock(b)
+		// TODO: append popped tx
+		//c._popped_tx.insert( _self._popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end() );
 	}
 
 	// add blocks from longer branch based on common ancestor 

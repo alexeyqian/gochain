@@ -115,6 +115,10 @@ func (fdb *ForkDB) GetBlock(id string) (*core.Block, error) {
 	return &e, nil
 }
 
+func (fdb *ForkDB) GetBlockByNumberFromBranch(headID string, num uint64) (*core.Block, error) {
+
+}
+
 func (fdb *ForkDB) CreateBlock(e *core.Block) error {
 	if !entity.HasID(e) {
 		return fmt.Errorf("create: entity doesn't have ID")

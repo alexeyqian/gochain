@@ -61,7 +61,20 @@ func (c *Chain) Remove() {
 	c.pendingTransactions = nil
 }
 
-func (c *Chain) GetBlock(num int) (*core.Block, error) {
+// get block from forkdb first, if not found, then try it from ledger
+func (c *Chain) GetBlockByNumber(num int) (*core.Block, error) {
+	// get from forkdb
+	// forkdb might contains multiple block with same num
+	// we need to point out the branch we want to search, which is main branch here.
+	fb, err := c.fdb.GetBlockByNumberFromBranch(c.Head().ID, uint64(num))
+	if err != nil {
+		return nil, err
+	} else {
+		return fb, nil
+	}
+
+	// get from ledger if cannot get block from forkdb
+	// get block from ledger cannot by id, which is very slow, has to be by num
 	// TODO: use cache to speed up reading
 	bdata, err := c.lgr.Read(num)
 	if err != nil {
@@ -180,12 +193,16 @@ func (c *Chain) genesis() {
 	c.lgr.Append(utils.Serialize(b))
 }
 
-// TODO: use cached gpo instead of read from database to improve perfomance
-func (c *Chain) HeadBlockID() string {
-	// should use c.Gpo().BlockID
-	return c.sdb.GetGpo().BlockID
+// TODO: use cached _head
+func (c *Chain) Head() *core.Block {
+	gpo, _ := c.sdb.GetGpo()
+	b, _ := c.GetBlock(gpo.BlockID)
+	return b
 }
 
-func (c *Chain) HeadBlockNum() uint64 {
-	return c.sdb.GetGpo().BlockNumber
+func (c *Chain) SetHead(b *core.Block) {
+	gpo, _ := c.sdb.GetGpo()
+	gpo.BlockID = b.ID
+	gpo.BlockNum = b.Num
+	c.sdb.UpdateGpo(gpo)
 }

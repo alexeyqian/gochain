@@ -11,7 +11,8 @@ import (
 /*
 TODO: limit operations in revision to 256
 limit revision Num to 256
-so max undoable operation is 256 x 256, which is good enough
+so max undoable operation is 256 x 256, which is good enough*/
+
 */
 
 type Revision struct {
@@ -87,6 +88,9 @@ func (udb *UndoableDB) undoOperation(op Revision) {
 	default:
 		panic("unknown operation")
 	}
+
+	// delete undoed revision log
+	udb.store.Delete(revisionTable, op.Key)
 }
 
 func (udb *UndoableDB) getAllRevisions(num uint32) map[uint64]Revision {
