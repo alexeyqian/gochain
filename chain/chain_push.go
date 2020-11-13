@@ -29,7 +29,7 @@ func (c *Chain) PushBlock(b *core.Block) {
 
 	maybeWarnMultipleProduction(c.fdb, b.Num)
 
-	if newHead.PreviousBlockID == c.HeadBlockID() {
+	if newHead.PrevBlockId == c.Head().ID {
 		c.startUndoSession()
 		ok := c.ApplyBlock(b)
 		if ok {
@@ -38,7 +38,7 @@ func (c *Chain) PushBlock(b *core.Block) {
 			// one block has one session/revision
 			c.pushUndoSession()
 			// if everything goes right, then update newHead as head of chain
-			c.setHead(newHead)
+			c.SetHead(newHead)
 		} else {
 			c.undo()
 			c.fdb.PopBlock()        // restore head to previous block
@@ -47,7 +47,7 @@ func (c *Chain) PushBlock(b *core.Block) {
 	} else {
 		// if the head block from the longest chain does not build off of the current head,
 		// then we need to switch to new branch.
-		switchBranch(newHead)
+		c.switchBranch(newHead)
 	}
 }
 

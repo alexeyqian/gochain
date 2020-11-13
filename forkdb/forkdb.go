@@ -116,7 +116,29 @@ func (fdb *ForkDB) GetBlock(id string) (*core.Block, error) {
 }
 
 func (fdb *ForkDB) GetBlockByNumberFromBranch(headID string, num uint64) (*core.Block, error) {
+	blocks := fdb.FetchBlocksByNumber(num)
+	if len(blocks) == 1 { // found exact one
+		return blocks[0], nil
+	}
 
+	// loop through the branch
+	count := 0
+	id := headID
+	for {
+		block, err := fdb.GetBlock(id)
+		if err != nil {
+			return nil, fmt.Errorf("forkdb: block not found, id:%s", id)
+		}
+		if block.Num == num {
+			return block, nil
+		}
+		id = block.PrevBlockId
+
+		count++
+		if count >= maxBranchingDepth {
+			return nil, fmt.Errorf("forkdb: block not found, num: %d", num)
+		}
+	}
 }
 
 func (fdb *ForkDB) CreateBlock(e *core.Block) error {

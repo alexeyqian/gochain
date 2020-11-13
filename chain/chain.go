@@ -20,6 +20,7 @@ type Chain struct {
 	fdb                 *forkdb.ForkDB
 	isGenesised         bool
 	pendingTransactions []core.Transactioner
+	cachedHead          *core.Block
 }
 
 func NewChain(lgr ledger.Ledger, storage store.Storage) *Chain {
@@ -193,11 +194,17 @@ func (c *Chain) genesis() {
 	c.lgr.Append(utils.Serialize(b))
 }
 
-// TODO: use cached _head
 func (c *Chain) Head() *core.Block {
-	gpo, _ := c.sdb.GetGpo()
-	b, _ := c.GetBlock(gpo.BlockID)
-	return b
+	if c.cachedHead == nil {
+		gpo, _ := c.sdb.GetGpo()
+		b, err := c.GetBlockByNumber(gpo.BlockID)
+		if err != nil {
+			panic("chain: cannot find the head block")
+		}
+		c.cachedHead = b
+	}
+
+	return c.cachedHead
 }
 
 func (c *Chain) SetHead(b *core.Block) {
@@ -205,4 +212,5 @@ func (c *Chain) SetHead(b *core.Block) {
 	gpo.BlockID = b.ID
 	gpo.BlockNum = b.Num
 	c.sdb.UpdateGpo(gpo)
+	c.cachedHead = b
 }
