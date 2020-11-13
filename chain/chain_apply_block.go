@@ -3,7 +3,7 @@ package chain
 import "github.com/alexeyqian/gochain/core"
 
 func validateBeforApply(b *core.Block) bool {
-	return false
+	return true
 }
 
 func (c *Chain) ApplyBlock(b *core.Block) bool {
