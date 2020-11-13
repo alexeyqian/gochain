@@ -52,8 +52,12 @@ func (c *Chain) PushBlock(b *core.Block) {
 		}
 	} else {
 		// if the head block from the longest chain does not build off of the current head,
-		// then we need to switch to new branch.
-		c.switchBranch(newHead)
+		// then we might need to switch to new branch.
+		// if the newly pushed block is the same height as head, nothing need to be done.
+		// only switch forks if newHead is actually higher than headblock
+		if newHead.BlockNum > c.Head().Num {
+			c.switchBranch(newHead)
+		}
 	}
 }
 
