@@ -38,6 +38,7 @@ func (fdb *ForkDB) PushBlock(b *core.Block) error {
 	return nil
 }
 
+// forkdb.PopBLock is part of chain.Popblock
 // forkdb should always have at lease one item,
 // every time the database opens, it will starts with the last irriversable block.
 // forkdb pop block is  part prcess of chain's pop block
@@ -68,4 +69,63 @@ func (fdb *ForkDB) linkable(b *core.Block) bool {
 	}
 
 	return false
+}
+
+// FetchBranchFrom get two branches, which shared same parent (not include parent), stored reversely.
+// should return sth like:
+// branch1: first, ..., a3, a2, a1.
+// branch2: second, ..., b3, b2, b1.
+// and a1.previous_id() == b1.previous_id() if found common ancestor
+// This function gets 2 branches leading back to the most recent common ancestor.
+func (fdb *ForkDB) FetchBranchFrom(first string, second string) ([]*core.Block, []*core.Block) {
+	var err error
+	var firstBranch []*core.Block
+	var firstBranchHead *core.Block
+	var secondBranch []*core.Block
+	var secondBranchHead *core.Block
+
+	firstBranchHead, err = fdb.GetBlock(first)
+	if err != nil {
+		panic(fmt.Sprintf("cannot find block: %s", first))
+	}
+	secondBranchHead, err = fdb.GetBlock(second)
+	if err != nil {
+		panic(fmt.Sprintf("cannot find block: %s", second))
+	}
+
+	for firstBranchHead.Num > secondBranchHead.Num {
+		firstBranch = append(firstBranch, firstBranchHead)
+		firstBranchHead, err = fdb.GetBlock(firstBranchHead.PrevBlockId)
+		if err != nil {
+			panic(fmt.Sprintf("cannot find block: %s", firstBranchHead.PrevBlockId))
+		}
+	}
+
+	for secondBranchHead.Num > firstBranchHead.Num {
+		secondBranch = append(secondBranch, secondBranchHead)
+		secondBranchHead, err = fdb.GetBlock(secondBranchHead.PrevBlockId)
+		if err != nil {
+			panic(fmt.Sprintf("cannot find block: %s", secondBranchHead.PrevBlockId))
+		}
+	}
+
+	for firstBranchHead.PrevBlockId != secondBranchHead.PrevBlockId {
+		firstBranch = append(firstBranch, firstBranchHead)
+		firstBranchHead, err = fdb.GetBlock(firstBranchHead.PrevBlockId)
+		if err != nil {
+			panic(fmt.Sprintf("cannot find block: %s", firstBranchHead.PrevBlockId))
+		}
+		secondBranch = append(secondBranch, secondBranchHead)
+		secondBranchHead, err = fdb.GetBlock(secondBranchHead.PrevBlockId)
+		if err != nil {
+			panic(fmt.Sprintf("cannot find block: %s", secondBranchHead.PrevBlockId))
+		}
+	}
+
+	if firstBranchHead.ID != "" && secondBranchHead.ID != "" {
+		firstBranch = append(firstBranch, firstBranchHead)
+		secondBranch = append(secondBranch, secondBranchHead)
+	}
+
+	return firstBranch, secondBranch
 }

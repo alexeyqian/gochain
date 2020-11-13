@@ -20,6 +20,9 @@ const ArticleBucket = "article"
 const CommentBucket = "comment"
 const VoteBucket = "vote"
 
+// TODO: use Gpo() Wso() to read cached data
+// after undo session, need to reload cached gpo and wso
+// add functions: SetGpo() SetWso()
 type StatusDB struct {
 	udb *undodb.UndoableDB
 }
