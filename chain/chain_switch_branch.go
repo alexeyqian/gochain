@@ -1,49 +1,5 @@
 package chain
 
-import (
-	"github.com/alexeyqian/gochain/core"
-	"github.com/alexeyqian/gochain/forkdb"
-)
-
-// TODO: use cached gpo instead of read from database to improve perfomance
-func (c *Chain) HeadBlockID() string{
-	// should use c.Gpo().BlockID
-	return c.sdb.GetGpo().BlockID
-}
-
-func (c *Chain) HeadBlockNum() uint64{
-	return c.sdb.GetGpo().BlockNumber
-}
-
-// This happens when two witness nodes are using same account
-func maybeWarnMultipleProduction(fdb *forkdb.ForkDB, uint64 blockNumber ){
-	blocks := fdb.FetchBlocksByNumber( blockNumber )
-	if len(blocks) <= 1 {
-		return // pass the check
- 	}
- 
- 	fmt.Printf("Encontered block num collision at block %d\n", blockNumber)
- 	for _, b := range blocks{
-		fmt.Printf("witness: %s, time: %d", b.Witness, b.CreatedOn)
- 	}   
-}
-
-// pop block from fork db, undo db operations, 
-// and pop transactions into poped transactions list. 
-func (c *Chain) PopBlock()
-      // _pending_tx_session.reset();
-      // save the head block so we can recover its transactions
-	  _, err := c.FetchBlockByID( c.HeadBlockID() )
-	  if err != nil {
-		panic("there are no blocks to pop.")
-	  }  
-
-      c.fdb.PopBlock();
-      c.sdb.Undo();
-
-      //c._popped_tx.insert( _self._popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end() );
-
-}
 
 func (c *Chain) swithBranch(newHead *core.Block){
 	// if the newly pushed block is the same height as head, nothing need to be done.
@@ -61,16 +17,15 @@ func (c *Chain) swithBranch(newHead *core.Block){
 	branch1, branch2 = c.fdb.FetchBranchFrom(newHead.BlockID, c.HeadBlockID)
 	commonAncestorBlockID := branch2[len(branch2) - 1].PreviousBlockID // also = branch1[len(branch1) - 1].PreviousBlockID
 	
+	// set forkdb head to short branch temporarily for popping, will set back to new header later
+	c.fdb.SetHead(branch1[0])
+
 	// pop blocks until we hit the commen ancestor block of these two branches
 	// abandon blocks on shorter branch	 
-	for c.HeadBlockID != commonAncestorBlockID {
+	for c.HeadBlockID() != commonAncestorBlockID {
 		// pop block from fork db, undo db operations, 
 		// and pop transactions into poped transactions list.
-		c.PopBlock() 
-		//retrive and validate
-		// c.softfork.PopBlock()
-		// c.UndoPopedBlock()
-		// add tx in popped block into pending or popped tx list
+		c.PopBlock() 		
 	}
 
 	// add blocks from longer branch based on common ancestor 
@@ -111,29 +66,4 @@ func (c *Chain) swithBranch(newHead *core.Block){
 	}
 
 	return true
-}
-
-
-func (c *Chain) PushBlock(b core.Block) {
-	-
-	// forkdb.PushBlock will set the head pointing to longest chain in forkdb.
-	c.fdb.PushBlock(b)
-	newHead := c.fdb.Head()
-
-	c.maybeWarnMultipleProduction(c.fork, b.Num)
-
-	// if the head block from the longest chain does not build off of the current head,
-	// then we need to switch to new branch.
-	if newHead.PreviousBlockID != c.HeadBlockID() {
-		swithBranch()
-	}
-
-	c.sdb.StartUndoSession()
-	ok := c.ApplyBlock(b)
-	if ok {
-		c.sdb.CommitUndoSession()
-	} else {
-		c.sdb.Undo()
-		c.fdb.Remove(b.ID)
-	}
 }

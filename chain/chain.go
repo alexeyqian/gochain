@@ -179,3 +179,13 @@ func (c *Chain) genesis() {
 	b := core.Block{ID: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
 	c.lgr.Append(utils.Serialize(b))
 }
+
+// TODO: use cached gpo instead of read from database to improve perfomance
+func (c *Chain) HeadBlockID() string {
+	// should use c.Gpo().BlockID
+	return c.sdb.GetGpo().BlockID
+}
+
+func (c *Chain) HeadBlockNum() uint64 {
+	return c.sdb.GetGpo().BlockNumber
+}

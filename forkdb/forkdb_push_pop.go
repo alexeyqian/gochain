@@ -38,10 +38,10 @@ func (fdb *ForkDB) PushBlock(b *core.Block) error {
 	return nil
 }
 
-// forkdb.PopBLock is part of chain.Popblock
+// PopBlock is part of chain.Popblock
 // forkdb should always have at lease one item,
 // every time the database opens, it will starts with the last irriversable block.
-// forkdb pop block is  part prcess of chain's pop block
+// pop current head block, and set the it's previous block as head
 func (fdb *ForkDB) PopBlock() {
 	var err error
 	_, err = fdb.GetBlock(fdb.Head().ID)

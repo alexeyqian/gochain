@@ -121,3 +121,7 @@ func (fdb *ForkDB) CreateBlock(e *core.Block) error {
 	}
 	return fdb.store.Put(branchTable, []byte(entity.GetID(e)), entity.Serialize(e))
 }
+
+func (fdb *ForkDB) RemoveBlock(id string) error {
+	return fdb.store.Delete(branchTable, []byte(id))
+}
