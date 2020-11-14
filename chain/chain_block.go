@@ -69,3 +69,14 @@ func (c *Chain) GenerateBlock() *core.Block {
 
 // c.Gpo()/SetGpo() used cached gpo
 // c.Wso()/ SetWso() use cached wso
+
+func (c *Chain) generateNextBlock(privkey string) *core.Block {
+	slotTime := getNextSlotTime(c.Gpo())
+	witness := getNextWitness(c.Gpo(), c.Wso())
+	// getScheduledWitness(gpo, wso, num)
+	return c.GenerateBlock(slotTime, witness, privkey)
+}
+
+func (c *Chain) GenerateBlock(slotTime int, witness string, privkey string) *core.Block {
+	// TODO: ...
+}
