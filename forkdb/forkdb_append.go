@@ -6,18 +6,18 @@ import (
 	"github.com/alexeyqian/gochain/core"
 )
 
-// multiple branches are stored in same table
+// AppendBlock insert new valid block into pending block tree
+// multiple branches are stored in same table as a tree
 // push a block into linked table if it can be linked to one of the branches in the table
 // otherwise the block will be put into unlinked table
-// after adding to linked table, the head will updated to point to longest branch if necessary
-func (fdb *ForkDB) PushBlock(b *core.Block) error {
+func (fdb *ForkDB) AppendBlock(b *core.Block) error {
 	// validate block before push, expired, max_depth of fork
-	if b.Num-fdb.Head().Num > maxBranchingDepth {
-		panic("reach max branching depth, head: %d, current: %d", fdb.Head().Num, b.Num)
-	}
+	//if b.Num-fdb.Head().Num > maxBranchingDepth {
+	//	panic("reach max branching depth, head: %d, current: %d", fdb.Head().Num, b.Num)
+	//}
 
 	// check duplication of BlockID before insert
-	_, err := fdb.GetBlock(b.ID)
+	_, err := fdb.GetBlockByID(b.ID)
 	if err == nil {
 		return fmt.Errorf("cannot store save block twice")
 	}
@@ -27,37 +27,23 @@ func (fdb *ForkDB) PushBlock(b *core.Block) error {
 		return fmt.Errorf("block is not linkable")
 	}
 
-	// pusht block into linked table (branch)
-	fdb.CreateBlock(b)
+	// save block into linked table (branch)
+	fdb.createBlock(b)
 
 	// switch head if num is bigger.
-	if b.Num > fdb.Head().Num {
-		fdb.SetHead(b)
-	}
+	//if b.Num > fdb.Head().Num {
+	//	fdb.SetHead(b)
+	//}
 
 	return nil
 }
 
-// PopBlock is part of chain.Popblock
-// forkdb should always have at lease one item,
-// every time the database opens, it will starts with the last irriversable block.
-// pop current head block, and set the it's previous block as head
-func (fdb *ForkDB) PopBlock() {
-	var err error
-	_, err = fdb.GetBlock(fdb.Head().ID)
-	if err != nil {
-		panic(fmt.Sprintf("cannot find the fork db item: %s", fdb.Head().ID))
-	}
+// restore tx to pending tx list
+// delete block from storage
+func (fdb *ForkDB) RemoveBlock(b *core.Block) {
+	// save tx back to pending tx list
 
-	// TODO: remove previous head block
-	// check if it's still the longest branch?
-
-	var prev *core.Block
-	prev, err = fdb.GetBlock(fdb.Head().PrevBlockId)
-	if err != nil {
-		panic(fmt.Sprintf("cannot find the ford db item: %s", fdb.Head().PrevBlockId))
-	}
-	fdb.SetHead(prev)
+	fdb.deleteBlock(b.ID)
 }
 
 func (fdb *ForkDB) linkable(b *core.Block) bool {
@@ -84,18 +70,18 @@ func (fdb *ForkDB) FetchBranchFrom(first string, second string) ([]*core.Block, 
 	var secondBranch []*core.Block
 	var secondBranchHead *core.Block
 
-	firstBranchHead, err = fdb.GetBlock(first)
+	firstBranchHead, err = fdb.GetBlockByID(first)
 	if err != nil {
 		panic(fmt.Sprintf("cannot find block: %s", first))
 	}
-	secondBranchHead, err = fdb.GetBlock(second)
+	secondBranchHead, err = fdb.GetBlockByID(second)
 	if err != nil {
 		panic(fmt.Sprintf("cannot find block: %s", second))
 	}
 
 	for firstBranchHead.Num > secondBranchHead.Num {
 		firstBranch = append(firstBranch, firstBranchHead)
-		firstBranchHead, err = fdb.GetBlock(firstBranchHead.PrevBlockId)
+		firstBranchHead, err = fdb.GetBlockByID(firstBranchHead.PrevBlockId)
 		if err != nil {
 			panic(fmt.Sprintf("cannot find block: %s", firstBranchHead.PrevBlockId))
 		}
@@ -103,7 +89,7 @@ func (fdb *ForkDB) FetchBranchFrom(first string, second string) ([]*core.Block, 
 
 	for secondBranchHead.Num > firstBranchHead.Num {
 		secondBranch = append(secondBranch, secondBranchHead)
-		secondBranchHead, err = fdb.GetBlock(secondBranchHead.PrevBlockId)
+		secondBranchHead, err = fdb.GetBlockByID(secondBranchHead.PrevBlockId)
 		if err != nil {
 			panic(fmt.Sprintf("cannot find block: %s", secondBranchHead.PrevBlockId))
 		}
@@ -111,12 +97,12 @@ func (fdb *ForkDB) FetchBranchFrom(first string, second string) ([]*core.Block, 
 
 	for firstBranchHead.PrevBlockId != secondBranchHead.PrevBlockId {
 		firstBranch = append(firstBranch, firstBranchHead)
-		firstBranchHead, err = fdb.GetBlock(firstBranchHead.PrevBlockId)
+		firstBranchHead, err = fdb.GetBlockByID(firstBranchHead.PrevBlockId)
 		if err != nil {
 			panic(fmt.Sprintf("cannot find block: %s", firstBranchHead.PrevBlockId))
 		}
 		secondBranch = append(secondBranch, secondBranchHead)
-		secondBranchHead, err = fdb.GetBlock(secondBranchHead.PrevBlockId)
+		secondBranchHead, err = fdb.GetBlockByID(secondBranchHead.PrevBlockId)
 		if err != nil {
 			panic(fmt.Sprintf("cannot find block: %s", secondBranchHead.PrevBlockId))
 		}

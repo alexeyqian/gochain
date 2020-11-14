@@ -9,13 +9,13 @@ import (
 // during the switch branch process, the chain's head might not synced with forkdb.head
 // but after the process, they should be consistent.
 func (c *Chain) switchBranch(newHead *core.Block) {
-	fmt.Printf("switching to fork with head id: %s", newHead.BlockID)
+	fmt.Printf("switching to fork with head id: %s", newHead.ID)
 
 	// get two branches, which shared same parent, not include parent, stored reversely.
 	// such as: head_block_id(), ..., a3, a2, a1 (a3.block_num > a2.block_num > a1.block_num)
 	// branch1 pointed by newHead, branch2 pointed by existing head
 	// branch1 is longer, branch 2 is shorter
-	branch1, branch2 = c.fdb.FetchBranchFrom(newHead.BlockID, c.Head().ID)
+	branch1, branch2 = c.fdb.FetchBranchFrom(newHead.ID, c.Head().ID)
 	commonAncestorBlockID := branch2[len(branch2)-1].PreviousBlockID // also = branch1[len(branch1) - 1].PreviousBlockID
 
 	// undo applied blocks of short branch2 (= current main branch)
@@ -57,17 +57,15 @@ func (c *Chain) switchBranch(newHead *core.Block) {
 			// if exception happens while applying block b3, then b3, b4, b5, ... new_head will all be removed.
 			// error happens at branch1[index], so also need to remove index itself
 			for j := len(branch1) - 1; j >= index; j-- {
-				c.fdb.RemoveBlock(branch1[j].ID)
+				// remove block will return tx inside the block back to pending tx list
+				c.fdb.RemoveBlock(branch1[j])
 			}
 
 			// undo all just applied blocks from the bad branch1
 			// ATTENTION: becareful of the partially applied index block (current block)
-			//_pending_tx_session.reset();
-			// the index block might be partially applied, so also need to be undo
 			for c.Head().ID != branch1[len(branch1)-1].PreviousBlockID {
 				// undo() will update chain's head (both in gpo can cached value)
-				c.undo() // pop block() -- include reset forkdb's head
-				// TODO: wrap undo() into popblock()? which also update the forkdb.head??
+				c.undo() // pop block()
 			}
 
 			// restore all blocks from the good fork
@@ -79,11 +77,9 @@ func (c *Chain) switchBranch(newHead *core.Block) {
 				}
 				c.pushUndoSession()
 			}
-
-			// reset head back to branch2's lastest block
-			c.fdb.SetHead(branch2[0])
-
 			break // break the loop
 		}
 	}
+
+	// c.SetHead(newHead) - NOT NECCESSARY, ALREADY DONE IN apply block by update gpo
 }

@@ -22,22 +22,26 @@ func maybeWarnMultipleProduction(fdb *forkdb.ForkDB, blockNumber uint64) {
 
 // each block create one new session/revision in undoable db
 // so pop block only need to undo last session/revision in undoable db
-func (c *Chain) PushBlock(b *core.Block) {
+func (c *Chain) PushBlock(newBlock *core.Block) {
 	maybeWarnMultipleProduction(c.fdb, b.Num)
 
 	// forkdb.PushBlock will set the head pointing to longest chain in forkdb.
-	c.fdb.PushBlock(b)
-	newHead := c.fdb.Head()
+	err := c.fdb.AppendBlock(newBlock)
+	if err != nil {
+		fmt.Errorf("invalid block, ignoring...")
+		return
+	}
 
-	if newHead.PrevBlockId == c.Head().ID {
+	if newBlock.PrevBlockId == c.Head().ID {
 		c.startUndoSession()
-		ok := c.ApplyBlock(b)
+		ok := c.ApplyBlock(newBlock)
 		if ok {
 			// if everything goes right, then gpo's head block will be updated to new head
 			// and all cached values will be reloaded
 			// Chain's push undo session should leave the operation logs for future popblock,
 			// only block becomes irriverible, then commit the block/session/revision
 			// each block has exactly one session/revision
+			// c.setHead(newBlock) - NOT NECESSARY, since head is reloaded from gpo in pushundosession
 			c.pushUndoSession()
 		} else {
 			// undo all operations on statusdb during ApplyBlock()
@@ -45,16 +49,16 @@ func (c *Chain) PushBlock(b *core.Block) {
 			c.undo()
 			// usally undo operation hase nothing to do with forkdb
 			// BUT here, the block is invalid, so we need to remove it
-			c.fdb.RemoveBlock(b.ID)
-
+			// before remove block, the system will unpack the tx and store them in pending_tx_list
+			c.fdb.RemoveBlock(newBlock)
+			// c.setHead(previous head) -- NOT NECCESSARY
 		}
 	} else {
-		// if the head block from the longest chain does not build off of the current head,
-		// then we might need to switch to new branch.
-		// if the newly pushed block is the same height as head, nothing need to be done.
-		// only switch forks if newHead is actually higher than headblock
-		if newHead.BlockNum > c.Head().Num {
-			c.switchBranch(newHead)
+		if newBlock.Num > c.Head().Num {
+			// if the new block is not build off from current chain's head block
+			// and also has bigger number, means it just created a new longest branch
+			// so we need to switch to the new longest branch
+			c.switchBranch(newBlock)
 		}
 	}
 }
@@ -64,3 +68,19 @@ func (c *Chain) PushBlock(b *core.Block) {
 func (c *Chain) PopBlock() {
 
 }*/
+
+// save tx to pending array
+func (c *Chain) PushTx(tx *core.Transactioner) error {
+	//c.fdb.PushTx(tx)
+	return nil
+}
+
+// remove tx from pending list, and append it to block
+func (c *Chain) MoveTxToBlock() {
+
+}
+
+// when remove a block from forkdb, need to gite the tx back to pending list
+func (c *Chain) GiveTxBackFromBlock() {
+
+}

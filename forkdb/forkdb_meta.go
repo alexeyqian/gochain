@@ -6,7 +6,7 @@ import (
 )
 
 type MetaData struct {
-	Head  core.Block
+	Head  core.Block // NOT USED
 	Other uint32
 }
 
