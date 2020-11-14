@@ -24,6 +24,10 @@ type Revision struct {
 }
 
 func (udb *UndoableDB) StartUndoSession() uint32 {
+	if udb.isUndoing {
+		panic("undo is not cleanly done")
+	}
+
 	// @future validate max revision Num to see if can process further
 
 	meta := udb.getMetaData()
@@ -60,6 +64,7 @@ func (udb *UndoableDB) UndoLastSession() {
 	udb.updateMetaData(meta)
 
 	udb.isUndoing = false
+	// reloadCachedValues()
 }
 
 func (udb *UndoableDB) CommitLastSession() {

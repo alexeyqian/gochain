@@ -8,36 +8,6 @@ import (
 	"github.com/alexeyqian/gochain/utils"
 )
 
-func (c *Chain) Head() *core.Block {
-	if c.cachedHead == nil {
-		gpo, _ := c.sdb.GetGpo()
-		b, err := c.GetBlockByNumber(gpo.BlockID)
-		if err != nil {
-			panic("chain: cannot find the head block")
-		}
-		c.cachedHead = b
-	}
-
-	return c.cachedHead
-}
-
-func (c *Chain) ReloadHead() {
-	gpo, _ := c.sdb.GetGpo()
-	b, err := c.GetBlockByNumber(gpo.BlockID)
-	if err != nil {
-		panic("chain: cannot find the head block")
-	}
-	c.cachedHead = b
-}
-
-func (c *Chain) SetHead(b *core.Block) {
-	gpo, _ := c.sdb.GetGpo()
-	gpo.BlockID = b.ID
-	gpo.BlockNum = b.Num
-	c.sdb.UpdateGpo(gpo)
-	c.cachedHead = b
-}
-
 // get block from forkdb first, if not found, then try it from ledger
 func (c *Chain) GetBlockByNumber(num int) (*core.Block, error) {
 	// get from forkdb

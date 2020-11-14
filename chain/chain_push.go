@@ -33,22 +33,20 @@ func (c *Chain) PushBlock(b *core.Block) {
 		c.startUndoSession()
 		ok := c.ApplyBlock(b)
 		if ok {
-			// if everything goes right, then update newHead as head of chain
-			// should happens before pushundosession
-			// since during set head it will also update the gpo inside statusdb/undodb
-			// TODO: should move SetHead into ApplyBlock() ??
-			c.SetHead(newHead)
-
+			// if everything goes right, then gpo's head block will be updated to new head
+			// and all cached values will be reloaded
 			// Chain's push undo session should leave the operation logs for future popblock,
 			// only block becomes irriverible, then commit the block/session/revision
-			// one block has one session/revision
+			// each block has exactly one session/revision
 			c.pushUndoSession()
 		} else {
-			c.undo()                // undo all operations on statusdb during ApplyBlock()
-			c.fdb.SetHead(c.Head()) // restore head to existing head
-			c.fdb.RemoveBlock(b.ID) // remove invalid block data from forkdb
-			// forkdb is not undoable, so need to manually restore values
-			// TODO: should we use undodb for forkdb, so it can be automatically restored??
+			// undo all operations on statusdb during ApplyBlock()
+			// also reload all cached values during undo
+			c.undo()
+			// usally undo operation doesn't need to remove the block in forkdb
+			// BUT here, the block is invalid, so we need to remove it
+			c.fdb.RemoveBlock(b.ID)
+
 		}
 	} else {
 		// if the head block from the longest chain does not build off of the current head,

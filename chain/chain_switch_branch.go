@@ -21,11 +21,12 @@ func (c *Chain) switchBranch(newHead *core.Block) {
 	for c.Head().ID != commonAncestorBlockID {
 		// undo will restore gpo and gpo.blockid(chain head) to previous block
 		// each undo will undo exactly one block (current head block)
+		// undo will also reload all cached values
 		c.undo()
-		// IMPORTANT: becareful not to update stausdb between undo() and next start new undo session
-		// reset head to previous block id
-		// since above undo operation has already restore the gpo.block id to previous block id
-		c.ReloadHead()
+		// ATTENTION: becareful not to do any sdb/udb data modification between undo() and next start new session()
+		// since it will cause the undo operation not cleanly done,
+		// NEED wrap modifactions between disableRevision() and enableRevision() if you really need to do so
+
 		// TODO: append popped tx
 		// pending transactions stored in forkdb's transaction table
 		// with field: isInBlock to indicate if it's been used or not
@@ -41,7 +42,6 @@ func (c *Chain) switchBranch(newHead *core.Block) {
 		c.startUndoSession()
 		ok := c.ApplyBlock(item)
 		if ok {
-			c.SetHead(item)
 			c.pushUndoSession()
 		} else {
 			fmt.Printf("error when switch branch")
