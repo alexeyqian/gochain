@@ -14,10 +14,17 @@ import (
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
+type PackedTx struct {
+	ID   string
+	Data []byte
+}
+
 type Transactioner interface {
 	Apply(sdb *statusdb.StatusDB) error
 	Validate(sdb *statusdb.StatusDB) error
 	// QuickValidate(sdb *statusdb.StatusDB) error
+	//Pack() []byte
+	//UnPack()
 }
 
 // GetRawTransaction
