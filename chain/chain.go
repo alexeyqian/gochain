@@ -57,3 +57,6 @@ func (c *Chain) Remove() {
 	c.fdb.Remove()
 	c.pendingTransactions = nil
 }
+
+// TODO: IMPORTANT:
+// setRevision() // revision equals current block num

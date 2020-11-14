@@ -1,10 +1,11 @@
 package forkdb
 
 import (
+	"github.com/alexeyqian/gochain/core"
 	"github.com/alexeyqian/gochain/store"
 )
 
-// TODO: IMPORTANT: remove head from forkdb, so we don't need to sync it with chain's head block.
+// TODO: Should ForkDB only need memory storage??
 
 const maxBranchingDepth = 100
 
@@ -65,4 +66,9 @@ func (fdb *ForkDB) reset() {
 	fdb.store.CreateBucket(branchTable)
 	fdb.store.Delete(metaTable, []byte(metaKey))
 	fdb.initMetaData()
+}
+
+func (fdb *ForkDB) ResetTo(b *core.Block) {
+	fdb.reset()
+	fdb.createBlock(b)
 }

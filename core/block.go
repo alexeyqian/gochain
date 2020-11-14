@@ -13,7 +13,7 @@ const MaxTransactionsInBlock = 10
 type Block struct {
 	ID           string // 32 bytes (256 bits) hash value of the entire block
 	PrevBlockId  string
-	Num          uint64
+	Num          uint64 // TODO: embed the num into ID, add func id_to_num(id)
 	MerkleRoot   string
 	CreatedOn    uint64
 	Witness      string
