@@ -43,7 +43,7 @@ func (c *Chain) PushBlock(b *core.Block) {
 			// undo all operations on statusdb during ApplyBlock()
 			// also reload all cached values during undo
 			c.undo()
-			// usally undo operation doesn't need to remove the block in forkdb
+			// usally undo operation hase nothing to do with forkdb
 			// BUT here, the block is invalid, so we need to remove it
 			c.fdb.RemoveBlock(b.ID)
 

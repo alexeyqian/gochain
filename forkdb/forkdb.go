@@ -8,6 +8,8 @@ import (
 	"github.com/alexeyqian/gochain/store"
 )
 
+// TODO: IMPORTANT: remove head from forkdb, so we don't need to sync it with chain's head block.
+
 const maxBranchingDepth = 100
 
 const metaTable = "_forkmeta_"
