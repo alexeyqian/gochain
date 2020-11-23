@@ -2,6 +2,8 @@ package store
 
 import "encoding/binary"
 
+// TODO: add func storage.Transact(context, options, func(*DB) error) error
+
 // will instruct the storage to create an auto increment key
 const AutoIncrementKey = "_auto_increment_key_"
 

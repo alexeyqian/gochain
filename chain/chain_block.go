@@ -77,6 +77,21 @@ func (c *Chain) generateNextBlock(privkey string) *core.Block {
 	return c.GenerateBlock(slotTime, witness, privkey)
 }
 
-func (c *Chain) GenerateBlock(slotTime int, witness string, privkey string) *core.Block {
+func (c *Chain) GenerateBlock(slotTime int, witnessName string, privkey string) *core.Block {
 	// TODO: ...
+	slotNum := getSlotAtTime(c.Gpo(), slotTime)
+	scheduledWitness := getScheduledWitness(c.Gpo(), c.Wso(), slotNum)
+	if scheduledWitness != witnessName {
+		panic("witness wrong")
+	}
+
+	witness := c.GetWitness(witnessName)
+	if witness.signingKey != privKey.getPubKey() {
+		panic("private key is incorrect")
+	}
+
+	// if tx.expiretime < slotTime continue
+
+	// c.PushBlock(b)
+	return b
 }
