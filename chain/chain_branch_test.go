@@ -17,6 +17,10 @@ func setup() {
 	alicekey, _ = utils.GenerateKey()
 }
 
+func teardown() {
+
+}
+
 func newChain(dir string) *Chain {
 	lgr := ledger.NewFileLedger(dir)
 	storage := store.NewBoltStorage(filepath.Join(dir, "status.db"))
