@@ -10,6 +10,10 @@ import (
 	"github.com/alexeyqian/gochain/store"
 )
 
+// TODO: New Design:
+// gpo and wso should be only persistent once at end of block apply,
+// but it can be modified in memory during apply block process.
+
 type Chain struct {
 	lgr                 ledger.Ledger
 	sdb                 *statusdb.StatusDB

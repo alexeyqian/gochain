@@ -1,6 +1,10 @@
 package chain
 
-import "github.com/alexeyqian/gochain/core"
+import (
+	"github.com/alexeyqian/gochain/config"
+	"github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/entity"
+)
 
 func (c *Chain) Head() *core.Block {
 	if c.cachedHead == nil {
@@ -32,3 +36,34 @@ func (c *Chain) SetHead(b *core.Block) {
 	c.sdb.UpdateGpo(gpo)
 	c.cachedHead = b
 }*/
+
+// Gpo get gpo of current chain
+func (c *Chain) Gpo() *entity.Gpo {
+	gpo, _ := c.sdb.GetGpo()
+	return gpo
+}
+
+// Wso get wso for current chain
+func (c *Chain) Wso() *entity.Wso {
+	wso, _ := c.sdb.GetWso()
+	return wso
+}
+
+// GetSlotAtTime find slot for a specific time
+func GetSlotAtTime(gpo *entity.Gpo, when int) int {
+	if uint64(when) < gpo.Time {
+		return 0
+	}
+	return (uint64(when) - gpo.Time) / config.BlockInterval
+}
+
+// GetNextBlockTime find next block time
+func GetNextBlockTime(gpo *entity.Gpo) int64 {
+	return int64(gpo.Time) + int64(config.BlockInterval*1)
+}
+
+// GetNextWitness find next witness
+func GetNextWitness(gpo *entity.Gpo, wso *entity.Wso) string {
+	aslot := (gpo.Time + 1*config.BlockInterval) / config.BlockInterval
+	return wso.CurrentWitnesses[int(aslot)%len(wso.CurrentWitnesses)]
+}

@@ -30,13 +30,6 @@ type Transactioner interface {
 // GetRawTransaction
 // DecodeRawTransaction
 
-// TODO: move to config
-const InitWitness = "init"
-const InitAmount = 100
-const AmountPerBlock = 100
-const BlockZeroId = "00000000-0000-0000-000000000000"
-const GenesisTime = 1632830400 //Date and time (GMT): Tuesday, September 28, 2021 12:00:00 PM
-
 const VoteParentTypeArticle = "VoteParentTypeArticle"
 const VoteParentTypeComment = "VoteParentTypeComment"
 const VoteParentTypeAccount = "VoteParentTypeAccount"

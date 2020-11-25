@@ -9,15 +9,19 @@ import (
 )
 
 func (c *Chain) genesis() {
+	// validation
+	if config.GenesisTime%config.BlockInterval != 0 {
+		panic("genesis time is incorrect.")
+	}
 
 	// update global status
 	var gpo entity.Gpo
 	gpo.ID = statusdb.GpoKey
-	gpo.BlockId = core.BlockZeroId
+	gpo.BlockId = config.BlockZeroId
 	gpo.BlockNum = 0
-	gpo.Witness = core.InitWitness
-	gpo.Time = core.GenesisTime
-	gpo.Supply = core.InitAmount
+	gpo.Witness = config.InitWitness
+	gpo.Time = config.GenesisTime
+	gpo.Supply = config.InitAmount
 	//fmt.Printf("creating gpo: %+v", gpo)
 	c.sdb.CreateGpo(&gpo)
 
@@ -29,15 +33,15 @@ func (c *Chain) genesis() {
 	// update chain database
 	var acc entity.Account
 	acc.ID = utils.CreateUuid() // TODO: should be public key string
-	acc.Name = core.InitWitness
-	acc.CreatedOn = core.GenesisTime
-	acc.Coin = core.InitAmount
+	acc.Name = config.InitWitness
+	acc.CreatedOn = config.GenesisTime
+	acc.Coin = config.InitAmount
 	err := c.sdb.CreateAccount(&acc)
 	if err != nil {
 		panic(err)
 	}
 
 	// update lgr, create a dummy block 0
-	b := core.Block{ID: core.BlockZeroId, Num: 0, CreatedOn: core.GenesisTime, Witness: core.InitWitness}
+	b := core.Block{ID: config.BlockZeroId, Num: 0, CreatedOn: config.GenesisTime, Witness: config.InitWitness}
 	c.lgr.Append(utils.Serialize(b))
 }
