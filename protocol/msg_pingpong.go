@@ -3,14 +3,14 @@ package protocol
 import "math/rand"
 
 type MsgPing struct {
-	Nonce uint64
+	Nonce int
 }
 
 type MsgPong struct {
-	Nonce uint64
+	Nonce int
 }
 
-func NewPingMsg(network string) (*Message, uint64, error) {
+func NewPingMsg(network string) (*Message, int, error) {
 	nonce := rand.Uint64()
 	payload := MsgPing{
 		Nonce: nonce,
@@ -24,7 +24,7 @@ func NewPingMsg(network string) (*Message, uint64, error) {
 	return msg, nonce, nil
 }
 
-func NewPongMsg(network string, nonce uint64) (*Message, error) {
+func NewPongMsg(network string, nonce int) (*Message, error) {
 	payload := MsgPong{
 		Nonce: nonce,
 	}

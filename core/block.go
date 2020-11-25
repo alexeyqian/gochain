@@ -12,14 +12,14 @@ const MaxTransactionsInBlock = 10
 
 type Block struct {
 	ID           string // 32 bytes (256 bits) hash value of the entire block
-	Num          uint64
+	Num          int
 	PrevBlockId  string
 	MerkleRoot   string
-	CreatedOn    uint64
+	CreatedOn    int
 	Witness      string
-	nonce        uint64
+	nonce        int
 	Transactions []Transactioner
-	//Size         uint64  ??
+	//Size         int  ??
 }
 
 func (b *Block) SerializeBlockWitoutId() []byte {

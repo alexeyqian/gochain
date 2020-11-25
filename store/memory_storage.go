@@ -13,14 +13,14 @@ type MemBucket map[string]MemValue
 type MemoryStorage struct {
 	pathname  string // not used
 	buckets   map[string]MemBucket
-	sequences map[string]uint64
+	sequences map[string]int
 }
 
 func NewMemoryStorage(name string) *MemoryStorage {
 	return &MemoryStorage{
 		pathname:  name,
 		buckets:   make(map[string]MemBucket),
-		sequences: make(map[string]uint64),
+		sequences: make(map[string]int),
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *MemoryStorage) Put(bucket string, key []byte, data []byte) error {
 	}
 
 	if key == nil || string(key) == AutoIncrementKey {
-		id := s.NextSequence(bucket) // return uint64, error
+		id := s.NextSequence(bucket) // return int, error
 		key = IntKeyToBytes(id)
 	}
 
@@ -63,7 +63,7 @@ func (s *MemoryStorage) Put(bucket string, key []byte, data []byte) error {
 	return nil
 }
 
-// autokey is uint64
+// autokey is int
 func (s *MemoryStorage) PutWithAutoKey(bucket string, data []byte) error {
 	return s.Put(bucket, nil, data)
 }
@@ -122,7 +122,7 @@ func (s *MemoryStorage) RowCount(bucket string) int {
 	return len(s.buckets[bucket])
 }
 
-func (s *MemoryStorage) NextSequence(bucket string) uint64 {
+func (s *MemoryStorage) NextSequence(bucket string) int {
 	res := s.sequences[bucket]
 	res++
 	s.sequences[bucket] = res

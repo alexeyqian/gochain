@@ -47,8 +47,8 @@ func (udb *UndoableDB) UndoLastSession() {
 
 	revisions := udb.getAllRevisions(meta.Revision)
 
-	// sort map by key(uint64) in reverse order
-	keys := make([]uint64, len(revisions))
+	// sort map by key(int) in reverse order
+	keys := make([]int, len(revisions))
 	i := 0
 	for k := range revisions {
 		keys[i] = k
@@ -103,9 +103,9 @@ func (udb *UndoableDB) undoOperation(op Revision) {
 	udb.store.Delete(revisionTable, op.Key)
 }
 
-func (udb *UndoableDB) getAllRevisions(num uint32) map[uint64]Revision {
+func (udb *UndoableDB) getAllRevisions(num uint32) map[int]Revision {
 	rawRevisions, _ := udb.store.GetAll(revisionTable)
-	revisions := make(map[uint64]Revision, len(rawRevisions))
+	revisions := make(map[int]Revision, len(rawRevisions))
 	for _, v := range rawRevisions {
 		key := store.BytesToIntKey(v.Key)
 		var rev Revision

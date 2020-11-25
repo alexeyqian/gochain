@@ -83,7 +83,7 @@ func (s *BoltStorage) Put(bucket string, key []byte, data []byte) error {
 		}
 
 		if key == nil || string(key) == AutoIncrementKey {
-			id, _ := b.NextSequence() // return uint64, error
+			id, _ := b.NextSequence() // return int, error
 			key = IntKeyToBytes(id)
 		}
 

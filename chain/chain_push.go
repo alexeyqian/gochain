@@ -12,13 +12,13 @@ import (
 
 // GenerateNextBlock create next block
 func (c *Chain) GenerateNextBlock() (*core.Block, error) {
-	slottime := GetNextBlockTime(c.Gpo())
-	name := GetNextWitness(c.Gpo(), c.Wso())
-	return c.GenerateBlock(uint64(slottime), name, getCurrentWitnessPrivateKey())
+	slottime := getNextBlockTime(c.Gpo())
+	name := getNextWitness(c.Gpo(), c.Wso())
+	return c.GenerateBlock(slottime, name, getCurrentWitnessPrivateKey())
 }
 
 // GenerateBlock create a new block without apply/push it into chain
-func (c *Chain) GenerateBlock(when uint64, who string, privkey *ecdsa.PrivateKey) (*core.Block, error) {
+func (c *Chain) GenerateBlock(when int, who string, privkey *ecdsa.PrivateKey) (*core.Block, error) {
 	if when <= c.Gpo().Time || when != c.Gpo().Time+config.BlockInterval {
 		return nil, fmt.Errorf("incorrect time")
 	}
@@ -113,7 +113,7 @@ func (c *Chain) GiveTxBackFromBlock() {
 }
 
 // This happens when two witness nodes are using same account
-func maybeWarnMultipleProduction(fdb *forkdb.ForkDB, blockNumber uint64) {
+func maybeWarnMultipleProduction(fdb *forkdb.ForkDB, blockNumber int) {
 	blocks := fdb.FetchBlocksByNumber(blockNumber)
 	if len(blocks) == 0 {
 		return // pass the check

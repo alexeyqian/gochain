@@ -16,13 +16,13 @@ const ledgerFileName = "ledger"
 const ledgerIndexFileName = "ledger.index"
 
 type ledgerRecord struct {
-	Size uint64 // size of ledger record
+	Size int    // size of ledger record
 	Data []byte // block data bytes
 }
 
 type indexRecord struct {
-	Offset uint64 // ledger record's Offset in ledger file
-	Size   uint64 // size of ledger record
+	Offset int // ledger record's Offset in ledger file
+	Size   int // size of ledger record
 }
 
 type FileLedger struct {
@@ -133,9 +133,9 @@ func (lg *FileLedger) Append(blockData []byte) error {
 	}
 	fileSize := info.Size()
 	blockSize := len(blockData)
-	size := uint64(BlockSizeBits)/uint64(8) + uint64(blockSize)
+	size := BlockSizeBits/8 + blockSize
 	lrecord := ledgerRecord{Size: size, Data: blockData}
-	irecord := indexRecord{Offset: uint64(fileSize), Size: lrecord.Size}
+	irecord := indexRecord{Offset: fileSize, Size: lrecord.Size}
 
 	// serialization
 	lbuf := new(bytes.Buffer)
@@ -173,7 +173,7 @@ func (lg *FileLedger) Read(bno int) ([]byte, error) {
 	var err error
 	var indexData, ledgerData []byte
 
-	indexData, err = readFromFile(lg.index, uint64(bno*IndexRecordSize), IndexRecordSize)
+	indexData, err = readFromFile(lg.index, bno*IndexRecordSize, IndexRecordSize)
 	if err != nil {
 		return nil, err
 	}
@@ -197,9 +197,9 @@ func fileExists(fPath string) bool {
 	return true
 }
 
-func readFromFile(file *os.File, Offset uint64, size uint64) ([]byte, error) {
+func readFromFile(file *os.File, Offset int, size int) ([]byte, error) {
 	res := make([]byte, size)
-	if _, err := file.ReadAt(res, int64(Offset)); err != nil {
+	if _, err := file.ReadAt(res, Offset); err != nil {
 		return nil, err
 	}
 

@@ -20,7 +20,7 @@ func NewSelector(db *statusdb.StatusDB) *Selector {
 	}
 }
 
-func (s *Selector) GetNextWitness() entity.Witness {
+func (s *Selector) getNextWitness() entity.Witness {
 	headBlockNumber := s.sdb.HeadBlockNumber()
 	// only happends at beginning of each round
 	if isNewRound(headBlockNumber) {
@@ -31,8 +31,8 @@ func (s *Selector) GetNextWitness() entity.Witness {
 	return wso.currentWitnesses[headBlockNumber%len(wso.currentWitnesses)]
 }
 
-func isNewRound(blockNumber uint64) bool {
-	return blockNumber%uint64(config.MaxWitnesses) == 0
+func isNewRound(blockNumber int) bool {
+	return blockNumber%config.MaxWitnesses == 0
 }
 
 func updateWitnessSchedule(sdb *statusdb.StatusDB) {

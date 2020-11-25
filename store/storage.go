@@ -45,7 +45,7 @@ type Storage interface {
 	 */
 	Put(bucket string, key []byte, data []byte) error
 
-	// auto key is uint64
+	// auto key is int
 	PutWithAutoKey(bucket string, data []byte) error
 
 	/*
@@ -65,7 +65,7 @@ type Storage interface {
 	DeleteBucket(bucket string) error
 }
 
-func IntKeyToBytes(key uint64) []byte {
+func IntKeyToBytes(key int) []byte {
 	b := make([]byte, 8)
 	if IsIntKeyEncodedInBigEndian {
 		binary.BigEndian.PutUint64(b, key)
@@ -75,8 +75,8 @@ func IntKeyToBytes(key uint64) []byte {
 	return b
 }
 
-func BytesToIntKey(data []byte) uint64 {
-	var key uint64
+func BytesToIntKey(data []byte) int {
+	var key int
 	if IsIntKeyEncodedInBigEndian {
 		key = binary.BigEndian.Uint64(data)
 	} else {

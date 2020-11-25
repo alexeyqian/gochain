@@ -15,7 +15,7 @@ type Node struct {
 	KnownNodes []string
 	//Peers      map[string]*Peer
 	//PingCh     chan peerPing
-	//PongCh     chan uint64
+	//PongCh     chan int
 	//mempool    *Mempool
 	// pointers to ledger and statusdb
 }
@@ -32,7 +32,7 @@ func NewNode(addr, chainnet string, knownNodes []string) (*Node, error) {
 		KnownNodes: knownNodes,
 		//Peers:      make(map[string]*Peer),
 		//PingCh:     make(chan peerPing),
-		//pongCh:     make(chan uint64),
+		//pongCh:     make(chan int),
 	}, nil
 }
 

@@ -7,18 +7,18 @@ import (
 
 type VersionNetAddr struct {
 	Time     uint32
-	NodeType uint64
+	NodeType int
 	IP       IPv4
 	Port     uint16
 }
 
 type MsgVersion struct {
 	Version     int32
-	NodeType    uint64
+	NodeType    int
 	Timestamp   int64
 	AddrRecv    VersionNetAddr
 	AddrFrom    VersionNetAddr
-	Nonce       uint64
+	Nonce       int
 	StartHeight int32
 }
 

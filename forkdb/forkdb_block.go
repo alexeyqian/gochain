@@ -7,6 +7,7 @@ import (
 	"github.com/alexeyqian/gochain/entity"
 )
 
+// GetBlocks get blocks
 func (fdb *ForkDB) GetBlocks() []*core.Block {
 	var res []*core.Block
 	items, _ := fdb.store.GetAll(branchTable)
@@ -18,6 +19,7 @@ func (fdb *ForkDB) GetBlocks() []*core.Block {
 	return res
 }
 
+// GetBlockByID get block by id
 func (fdb *ForkDB) GetBlockByID(id string) (*core.Block, error) {
 	data, err := fdb.store.Get(branchTable, []byte(id))
 	if err != nil {
@@ -28,8 +30,8 @@ func (fdb *ForkDB) GetBlockByID(id string) (*core.Block, error) {
 	return &e, nil
 }
 
-// might have multiple blocks with same block num
-func (fdb *ForkDB) GetBlocksByNumber(num uint64) []*core.Block {
+// GetBlocksByNumber might have multiple blocks with same block num
+func (fdb *ForkDB) GetBlocksByNumber(num int) []*core.Block {
 	var blocks []*core.Block
 
 	items := fdb.GetBlocks()
@@ -53,7 +55,7 @@ func (fdb *ForkDB) deleteBlock(id string) error {
 	return fdb.store.Delete(branchTable, []byte(id))
 }
 
-func (fdb *ForkDB) GetBlockByNumberFromBranch(headID string, num uint64) (*core.Block, error) {
+func (fdb *ForkDB) GetBlockByNumberFromBranch(headID string, num int) (*core.Block, error) {
 	blocks := fdb.GetBlocksByNumber(num)
 	if len(blocks) == 1 { // found exact one
 		return blocks[0], nil

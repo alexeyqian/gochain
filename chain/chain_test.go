@@ -93,7 +93,7 @@ func TestGenerateBlocks(t *testing.T) {
 		c.AddPendingTx(tx)
 		//chain.BroadcastTx(tx)
 		b := c.GenerateBlock()
-		if b.Num != uint64(i) {
+		if b.Num != i {
 			t.Errorf("expected: %d, actual: %d", i, b.Num)
 		}
 
@@ -107,7 +107,7 @@ func TestGenerateBlocks(t *testing.T) {
 		if gpo.Time != b.CreatedOn {
 			t.Errorf("gpo time expected: %d, actual: %d", b.CreatedOn, gpo.Time)
 		}
-		if gpo.Supply != (core.InitAmount + core.AmountPerBlock*uint64(i)) {
+		if gpo.Supply != (core.InitAmount + core.AmountPerBlock*i) {
 			t.Errorf("generate block gpo amount expected: %d, actual: %d", core.InitAmount+core.AmountPerBlock*i, gpo.Supply)
 		}
 

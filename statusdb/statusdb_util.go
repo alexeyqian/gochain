@@ -1,6 +1,6 @@
 package statusdb
 
-func (sdb *StatusDB) HeadBlockNumber() uint64 {
+func (sdb *StatusDB) HeadBlockNumber() int {
 	gpo, _ := sdb.GetGpo()
 	return gpo.BlockNum
 }

@@ -1,7 +1,7 @@
 package node
 
 type peerPing struct {
-	nonce  uint64
+	nonce  int
 	peerID string
 }
 

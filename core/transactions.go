@@ -38,7 +38,7 @@ type CreateAccountTransaction struct {
 	ID        string // [256]byte hash256
 	Signature string // should be [SIGBITS]byte
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	AccountId   string
@@ -49,19 +49,19 @@ type TransferCoinTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	From   string
 	To     string
-	Amount uint64
+	Amount int
 }
 
 type CreateArticleTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	ArticleId string
@@ -75,7 +75,7 @@ type CreateCommentTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	CommentId string
@@ -88,13 +88,13 @@ type VoteTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	ParentId   string
 	ParentType string
 	Direction  int8
-	VotePower  uint64
+	VotePower  int
 	Voter      string
 }
 

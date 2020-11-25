@@ -49,21 +49,18 @@ func (c *Chain) Wso() *entity.Wso {
 	return wso
 }
 
-// GetSlotAtTime find slot for a specific time
-func GetSlotAtTime(gpo *entity.Gpo, when int) int {
-	if uint64(when) < gpo.Time {
+func getSlotAtTime(gpo *entity.Gpo, when int) int {
+	if when < gpo.Time {
 		return 0
 	}
-	return (uint64(when) - gpo.Time) / config.BlockInterval
+	return (when - gpo.Time) / config.BlockInterval
 }
 
-// GetNextBlockTime find next block time
-func GetNextBlockTime(gpo *entity.Gpo) int64 {
-	return int64(gpo.Time) + int64(config.BlockInterval*1)
+func getNextBlockTime(gpo *entity.Gpo) int {
+	return gpo.Time + config.BlockInterval*1
 }
 
-// GetNextWitness find next witness
-func GetNextWitness(gpo *entity.Gpo, wso *entity.Wso) string {
+func getNextWitness(gpo *entity.Gpo, wso *entity.Wso) string {
 	aslot := (gpo.Time + 1*config.BlockInterval) / config.BlockInterval
 	return wso.CurrentWitnesses[int(aslot)%len(wso.CurrentWitnesses)]
 }

@@ -5,12 +5,12 @@ import (
 	"github.com/alexeyqian/gochain/utils"
 )
 
-// get block from forkdb first, if not found, then try it from ledger
+// GetBlockByNumber get block from forkdb first, if not found, then try it from ledger
 func (c *Chain) GetBlockByNumber(num int) (*core.Block, error) {
 	// get from forkdb
 	// forkdb might contains multiple block with same num
 	// we need to point out the branch we want to search, which is main branch here.
-	fb, err := c.fdb.GetBlockByNumberFromBranch(c.Head().ID, uint64(num))
+	fb, err := c.fdb.GetBlockByNumberFromBranch(c.Head().ID, num)
 	if err != nil {
 		return nil, err
 	} else {

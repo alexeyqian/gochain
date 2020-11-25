@@ -16,8 +16,8 @@ const (
 type Peer struct {
 	Address    net.Addr
 	Connection io.ReadWriteCloser
-	PongCh     chan uint64 // pass pong replies
-	NodeType   uint64      // describes feature supported by the peer
+	PongCh     chan int // pass pong replies
+	NodeType   int      // describes feature supported by the peer
 	Version    int32
 }
 
@@ -30,7 +30,7 @@ func (p *Peer) String() string {
 }
 
 type peerPing struct {
-	nonce  uint64
+	nonce  int
 	peerID string
 }
 
@@ -42,7 +42,7 @@ type peerPing struct {
 func (nd *Node) monitorPeers() {
 	// TODO: should we use peerID as key?
 	// since nonc might be same from different peers
-	peerPings := make(map[uint64]string)
+	peerPings := make(map[int]string)
 
 	for {
 		select {

@@ -2,7 +2,7 @@ package undodb
 
 import "fmt"
 
-// TODO: add param keytype: enum: string or auto incremented id as uint64
+// TODO: add param keytype: enum: string or auto incremented id as int
 func (udb *UndoableDB) CreateTable(name string) error {
 	if name == metaTable || name == revisionTable {
 		return fmt.Errorf("cannot use internal names")
