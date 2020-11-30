@@ -3,8 +3,8 @@ package undodb
 import "github.com/alexeyqian/gochain/entity"
 
 type MetaData struct {
-	Revision            uint32
-	SequencePerRevision uint32
+	Revision            int
+	SequencePerRevision int
 }
 
 func (udb *UndoableDB) initMetaData() {

@@ -10,25 +10,31 @@ import (
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
+// Selector witness selector type
 type Selector struct {
 	sdb *statusdb.StatusDB
 }
 
+// NewSelector standard new func
 func NewSelector(db *statusdb.StatusDB) *Selector {
 	return &Selector{
 		sdb: db,
 	}
 }
 
-func (s *Selector) getNextWitness() entity.Witness {
+func (s *Selector) getNextWitness() string {
 	headBlockNumber := s.sdb.HeadBlockNumber()
 	// only happends at beginning of each round
 	if isNewRound(headBlockNumber) {
 		updateWitnessSchedule(s.sdb)
 	}
 
-	wso, _ := s.sdb.GetWso()
-	return wso.currentWitnesses[headBlockNumber%len(wso.currentWitnesses)]
+	wso, err := s.sdb.GetWso()
+	if err != nil {
+		panic("cannot get next witness")
+	}
+
+	return wso.CurrentWitnesses[headBlockNumber%len(wso.CurrentWitnesses)]
 }
 
 func isNewRound(blockNumber int) bool {
@@ -40,7 +46,9 @@ func updateWitnessSchedule(sdb *statusdb.StatusDB) {
 	topVoted := getTopVotedWitnesses(sdb, config.MaxWitnesses)
 	shuffleWitnesses(topVoted)
 	wso, _ := sdb.GetWso()
-	wso.currentWitnesses = topVoted
+	for _, item := range topVoted {
+		wso.CurrentWitnesses = append(wso.CurrentWitnesses, item.Name)
+	}
 
 	// update other median data, such as block size, account creation fee etc.
 	// TODO: ...
@@ -57,7 +65,7 @@ func updateWitnessSchedule(sdb *statusdb.StatusDB) {
 	sdb.UpdateWso(wso)
 }
 
-func getTopVotedWitnesses(sdb *statusdb.StatusDB, max int) []entity.Witness {
+func getTopVotedWitnesses(sdb *statusdb.StatusDB, max int) []*entity.Witness {
 	witnesses := sdb.GetWitnesses()
 
 	// sort by votes desc
@@ -68,7 +76,7 @@ func getTopVotedWitnesses(sdb *statusdb.StatusDB, max int) []entity.Witness {
 	return witnesses[:max]
 }
 
-func shuffleWitnesses(witnesses []entity.Witness) {
+func shuffleWitnesses(witnesses []*entity.Witness) {
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(witnesses), func(i, j int) { witnesses[i], witnesses[j] = witnesses[j], witnesses[i] })
 }

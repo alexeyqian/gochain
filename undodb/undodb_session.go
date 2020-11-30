@@ -8,22 +8,19 @@ import (
 	"github.com/alexeyqian/gochain/entity"
 )
 
-/*
-TODO: limit operations in revision to 256
-limit revision Num to 256
-so max undoable operation is 256 x 256, which is good enough*/
-
-*/
+// TODO: limit operations in revision to 256
+// limit revision Num to 256
+// so max undoable operation is 256 x 256, which is good enough*/
 
 type Revision struct {
-	Num       uint32
+	Num       int
 	Table     string
 	Operation string
 	Key       string
 	Data      []byte
 }
 
-func (udb *UndoableDB) StartUndoSession() uint32 {
+func (udb *UndoableDB) StartUndoSession() int {
 	if udb.isUndoing {
 		panic("undo is not cleanly done")
 	}
@@ -75,14 +72,14 @@ func (udb *UndoableDB) CommitLastSession() {
 
 	revisions := udb.getAllRevisions(meta.Revision)
 	for k, _ := range revisions {
-		udb.store.Delete(revisionTable, store.IntKeyToBytes(k))
+		udb.store.Delete(revisionTable, store.IntKeyToBytes(uint64(k)))
 	}
 
 	meta.Revision--
 	udb.updateMetaData(meta)
 }
 
-func (udb *UndoableDB) getCurrentRevision() uint32 {
+func (udb *UndoableDB) getCurrentRevision() int {
 	return udb.getMetaData().Revision
 }
 
@@ -100,10 +97,10 @@ func (udb *UndoableDB) undoOperation(op Revision) {
 	}
 
 	// delete undoed revision log
-	udb.store.Delete(revisionTable, op.Key)
+	udb.store.Delete(revisionTable, []byte(op.Key))
 }
 
-func (udb *UndoableDB) getAllRevisions(num uint32) map[int]Revision {
+func (udb *UndoableDB) getAllRevisions(num int) map[int]Revision {
 	rawRevisions, _ := udb.store.GetAll(revisionTable)
 	revisions := make(map[int]Revision, len(rawRevisions))
 	for _, v := range rawRevisions {
@@ -111,7 +108,7 @@ func (udb *UndoableDB) getAllRevisions(num uint32) map[int]Revision {
 		var rev Revision
 		entity.Deserialize(&rev, v.Value)
 		if rev.Num == num {
-			revisions[key] = rev
+			revisions[int(key)] = rev
 		}
 	}
 	return revisions
@@ -120,7 +117,7 @@ func (udb *UndoableDB) getAllRevisions(num uint32) map[int]Revision {
 func (udb *UndoableDB) saveRevision(table, key string, data []byte, operation string) error {
 	// avoiding create operation logs during undoing
 	// otherwise it will create operation for undo's undo
-	if udb.isUndoing { 
+	if udb.isUndoing {
 		return nil
 	}
 

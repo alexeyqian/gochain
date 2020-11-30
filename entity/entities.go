@@ -72,8 +72,8 @@ type Comment struct {
 	Commentor string
 	Body      string
 	CreatedOn int
-	UpVotes   uint32
-	DownVotes uint32
+	UpVotes   int
+	DownVotes int
 	VotePower int
 }
 

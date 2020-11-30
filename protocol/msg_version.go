@@ -6,7 +6,7 @@ import (
 )
 
 type VersionNetAddr struct {
-	Time     uint32
+	Time     int
 	NodeType int
 	IP       IPv4
 	Port     uint16

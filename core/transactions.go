@@ -93,7 +93,7 @@ type VoteTransaction struct {
 
 	ParentId   string
 	ParentType string
-	Direction  int8
+	Direction  int
 	VotePower  int
 	Voter      string
 }

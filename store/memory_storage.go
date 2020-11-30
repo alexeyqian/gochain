@@ -122,9 +122,9 @@ func (s *MemoryStorage) RowCount(bucket string) int {
 	return len(s.buckets[bucket])
 }
 
-func (s *MemoryStorage) NextSequence(bucket string) int {
+func (s *MemoryStorage) NextSequence(bucket string) uint64 {
 	res := s.sequences[bucket]
 	res++
 	s.sequences[bucket] = res
-	return res
+	return uint64(res)
 }

@@ -135,7 +135,7 @@ func (lg *FileLedger) Append(blockData []byte) error {
 	blockSize := len(blockData)
 	size := BlockSizeBits/8 + blockSize
 	lrecord := ledgerRecord{Size: size, Data: blockData}
-	irecord := indexRecord{Offset: fileSize, Size: lrecord.Size}
+	irecord := indexRecord{Offset: int(fileSize), Size: lrecord.Size}
 
 	// serialization
 	lbuf := new(bytes.Buffer)
@@ -199,7 +199,7 @@ func fileExists(fPath string) bool {
 
 func readFromFile(file *os.File, Offset int, size int) ([]byte, error) {
 	res := make([]byte, size)
-	if _, err := file.ReadAt(res, Offset); err != nil {
+	if _, err := file.ReadAt(res, int64(Offset)); err != nil {
 		return nil, err
 	}
 

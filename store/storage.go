@@ -65,7 +65,7 @@ type Storage interface {
 	DeleteBucket(bucket string) error
 }
 
-func IntKeyToBytes(key int) []byte {
+func IntKeyToBytes(key uint64) []byte {
 	b := make([]byte, 8)
 	if IsIntKeyEncodedInBigEndian {
 		binary.BigEndian.PutUint64(b, key)
@@ -75,8 +75,8 @@ func IntKeyToBytes(key int) []byte {
 	return b
 }
 
-func BytesToIntKey(data []byte) int {
-	var key int
+func BytesToIntKey(data []byte) uint64 {
+	var key uint64
 	if IsIntKeyEncodedInBigEndian {
 		key = binary.BigEndian.Uint64(data)
 	} else {

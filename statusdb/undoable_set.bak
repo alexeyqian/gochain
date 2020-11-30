@@ -1,6 +1,7 @@
 package statusdb
 
 /*
+
 import (
 	"github.com/alexeyqian/gochain/utils"
 	"fmt"
@@ -11,12 +12,12 @@ type UndoableSet struct{
 	storage *Storage
 	dataBucket string
 	stateBucket string
-	latestRevision uint32
-	count uint32
+	latestRevision int
+	count int
 }
 
 type UndoState struct{
-	revision uint32
+	revision int
 	newIDs []string
 	removedValues map[string][]byte
 	oldValues map[string][]byte
@@ -264,4 +265,20 @@ func (us *UndoableSet) latestState() *UndoState{
 	var state UndoState
 	entity.Deserialize(&state, data)
 	return &state
-}*/
+}
+*/
+
+/*
+func (us * UndoableSet) latestState() * UndoState{
+	data, err := us.storage.Get(us.stateBucket, us.latestRevision)
+	if err != nil{
+		panic("undoable set: cannot get latest state")
+	}
+
+	var state UndoState
+	entity.Deserialize(&state, data)
+	return &state
+}
+*/te
+}
+*/

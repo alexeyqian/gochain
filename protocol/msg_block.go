@@ -1,11 +1,11 @@
 package protocol
 
 type MsgBlock struct {
-	Version    int32
+	Version    int
 	PrevBlock  [32]byte
 	MerkleRoot [32]byte
-	Timestamp  uint32
-	Nonce      uint32
-	TxCount    uint8
+	Timestamp  int
+	Nonce      int
+	TxCount    int
 	Txs        []MsgTx
 }

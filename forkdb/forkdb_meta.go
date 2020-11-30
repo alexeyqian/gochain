@@ -7,7 +7,7 @@ import (
 
 type MetaData struct {
 	Head  core.Block // NOT USED
-	Other uint32
+	Other int
 }
 
 func (fdb *ForkDB) initMetaData() {

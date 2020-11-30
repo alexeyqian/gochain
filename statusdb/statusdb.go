@@ -18,6 +18,7 @@ const WitnessBucket = "witness"
 const ArticleBucket = "article"
 const CommentBucket = "comment"
 const VoteBucket = "vote"
+const SoftForkBucket = "softfork"
 
 // TODO: use Gpo() Wso() to read cached data
 // after undo session, need to reload cached gpo and wso
