@@ -22,7 +22,7 @@ func TestCreateComment(t *testing.T) {
 	tx.CommentId = "test_comment_001"
 	tx.Body = "comment_test_body"
 	tx.Commentor = "bob"
-	tx.CreatedOn = uint64(time.Now().Unix())
+	tx.CreatedOn = int(time.Now().Unix())
 	c.AddPendingTx(&tx)
 	c.GenerateBlock()
 

@@ -14,21 +14,21 @@ import (
 	"github.com/alexeyqian/gochain/statusdb"
 )
 
+type PackedTx struct {
+	ID   string
+	Data []byte
+}
+
 type Transactioner interface {
 	Apply(sdb *statusdb.StatusDB) error
 	Validate(sdb *statusdb.StatusDB) error
 	// QuickValidate(sdb *statusdb.StatusDB) error
+	//Pack() []byte
+	//UnPack()
 }
 
 // GetRawTransaction
 // DecodeRawTransaction
-
-const InitWitness = "init"
-const InitAmount = 100
-const AmountPerBlock = 100
-const BlockInterval = 3 // seconds
-const BlockZeroId = "00000000-0000-0000-000000000000"
-const GenesisTime = 1632830400 //Date and time (GMT): Tuesday, September 28, 2021 12:00:00 PM
 
 const VoteParentTypeArticle = "VoteParentTypeArticle"
 const VoteParentTypeComment = "VoteParentTypeComment"
@@ -38,7 +38,7 @@ type CreateAccountTransaction struct {
 	ID        string // [256]byte hash256
 	Signature string // should be [SIGBITS]byte
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	AccountId   string
@@ -49,19 +49,19 @@ type TransferCoinTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	From   string
 	To     string
-	Amount uint64
+	Amount int
 }
 
 type CreateArticleTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	ArticleId string
@@ -75,7 +75,7 @@ type CreateCommentTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	CommentId string
@@ -88,13 +88,13 @@ type VoteTransaction struct {
 	ID        string
 	Signature string
 	CreatedBy string
-	CreatedOn uint64
+	CreatedOn int
 	PublicKey string
 
 	ParentId   string
 	ParentType string
-	Direction  int8
-	VotePower  uint64
+	Direction  int
+	VotePower  int
 	Voter      string
 }
 

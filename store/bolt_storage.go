@@ -83,7 +83,7 @@ func (s *BoltStorage) Put(bucket string, key []byte, data []byte) error {
 		}
 
 		if key == nil || string(key) == AutoIncrementKey {
-			id, _ := b.NextSequence() // return uint64, error
+			id, _ := b.NextSequence() // return int, error
 			key = IntKeyToBytes(id)
 		}
 
@@ -170,6 +170,19 @@ func (s *BoltStorage) CreateBucket(bucket string) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			tx.CreateBucket([]byte(bucket))
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (s *BoltStorage) DeleteBucket(bucket string) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b != nil {
+			tx.DeleteBucket([]byte(bucket))
 		}
 
 		return nil

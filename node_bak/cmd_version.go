@@ -22,7 +22,7 @@ func (nd *Node) handleVersion(header *protocol.MessageHeader, conn net.Conn) err
 	peer := Peer{
 		Address:    conn.RemoteAddr(),
 		Connection: conn,
-		PongCh:     make(chan uint64),
+		PongCh:     make(chan int),
 		NodeType:   version.NodeType,
 		Version:    version.Version,
 	}

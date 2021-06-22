@@ -34,7 +34,7 @@ func CreateTestAccount(name string) *core.CreateAccountTransaction {
 	var tx core.CreateAccountTransaction
 	tx.AccountId = utils.CreateUuid()
 	tx.AccountName = name
-	tx.CreatedOn = uint64(time.Now().Unix())
+	tx.CreatedOn = time.Now().Unix()
 	return &tx
 }
 
@@ -56,7 +56,7 @@ func CreateTestBlocks(c *Chain, count int, datadir string) {
 		c.AddPendingTx(tx)
 		//BroadcastTx(tx)
 		b := c.GenerateBlock()
-		if b.Num != uint64(i) {
+		if b.Num != i {
 			panic(fmt.Sprintf("expected: %d, actual: %d", i, b.Num))
 		}
 
@@ -70,7 +70,7 @@ func CreateTestBlocks(c *Chain, count int, datadir string) {
 		if gpo.Time != b.CreatedOn {
 			panic(fmt.Sprintf("gpo time expected: %d, actual: %d", b.CreatedOn, gpo.Time))
 		}
-		if gpo.Supply != (core.InitAmount + core.AmountPerBlock*uint64(i)) {
+		if gpo.Supply != (core.InitAmount + core.AmountPerBlock*i) {
 			panic(fmt.Sprintf("generate block gpo amount expected: %d, actual: %d", core.InitAmount+core.AmountPerBlock*i, gpo.Supply))
 		}
 

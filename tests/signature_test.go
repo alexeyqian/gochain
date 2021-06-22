@@ -41,7 +41,7 @@ func TestSigning(t *testing.T) {
 	tx.ID = ""
 	tx.Signature = ""
 	tx.CreatedBy = "init"
-	tx.CreatedOn = uint64(time.Now().Unix())
+	tx.CreatedOn = time.Now().Unix()
 	tx.PublicKey = string(pubkey)
 
 	tx.AccountId = utils.CreateUuid()

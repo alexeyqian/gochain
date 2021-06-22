@@ -98,11 +98,11 @@ func DecodeRawTransaction(data []byte) {
 }
 
 // GetBlockByNum, GetBlockById
-func GetBlock(num uint64) {
+func GetBlock(num int) {
 
 }
 
-func GetBlockHash(num uint64) string {
+func GetBlockHash(num int) string {
 	return ""
 }
 

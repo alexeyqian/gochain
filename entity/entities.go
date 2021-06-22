@@ -12,29 +12,46 @@ type Entity interface {
 type Gpo struct {
 	ID       string
 	BlockId  string
-	BlockNum uint64
+	BlockNum int
 	Witness  string
-	Time     uint64
+	Time     int
 	Version  string
-	Supply   uint64
+	Supply   int
+}
+
+type Wso struct {
+	ID                 string
+	MajorVersion       int
+	MaxBlockSize       int
+	AccountCreationFee int
+	CurrentWitnesses   []string
+}
+
+type SoftForkItem struct {
+	ID          string
+	BlockNum    int
+	BlockData   []byte
+	PrevBlockID string
 }
 
 type Witness struct {
-	ID   string
-	Name string
+	ID      string
+	Name    string
+	Votes   int
+	Version int
 }
 
 type Account struct {
 	ID           string
 	Name         string
-	CreatedOn    uint64
-	Coin         uint64
-	Vest         uint64
-	Credit       uint64
-	UpVotes      uint32
-	DownVotes    uint32
-	VotePower    uint64
-	ArticleCount uint64
+	CreatedOn    int
+	Coin         int
+	Vest         int
+	Credit       int
+	UpVotes      int
+	DownVotes    int
+	VotePower    int
+	ArticleCount int
 }
 
 type Article struct {
@@ -43,9 +60,9 @@ type Article struct {
 	Title     string
 	Body      string
 	Meta      string
-	UpVotes   uint32
-	DownVotes uint32
-	VotePower uint64
+	UpVotes   int
+	DownVotes int
+	VotePower int
 }
 
 type Comment struct {
@@ -54,18 +71,18 @@ type Comment struct {
 	CommentId string
 	Commentor string
 	Body      string
-	CreatedOn uint64
-	UpVotes   uint32
-	DownVotes uint32
-	VotePower uint64
+	CreatedOn int
+	UpVotes   int
+	DownVotes int
+	VotePower int
 }
 
 type Vote struct {
 	ID         string
 	ParentId   string
 	ParentType string
-	Direction  int8
-	VotePower  uint64
+	Direction  int
+	VotePower  int
 	Voter      string
 }
 

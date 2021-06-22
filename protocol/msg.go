@@ -36,7 +36,7 @@ type Magic [magicLength]byte
 type MessageHeader struct {
 	Magic    [magicLength]byte
 	Command  [commandLength]byte
-	Length   uint32               // length of payload
+	Length   int                  // length of payload
 	Checksum [checksumLength]byte // checksum of the payload
 }
 
@@ -62,7 +62,7 @@ func NewMessage(network, cmd string, payload interface{}) (*Message, error) {
 		MessageHeader: MessageHeader{
 			Magic:    magic,
 			Command:  command,
-			Length:   uint32(len(serializedPayload)),
+			Length:   len(serializedPayload),
 			Checksum: checksum(serializedPayload),
 		},
 		Payload: serializedPayload,

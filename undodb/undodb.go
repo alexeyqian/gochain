@@ -5,7 +5,8 @@ import (
 )
 
 type UndoableDB struct {
-	store store.Storage
+	store     store.Storage
+	isUndoing bool
 }
 
 // these two table names are reserved by database
@@ -21,7 +22,8 @@ const revisionTable = "_revision_"
 
 func NewUndoableDB(storage store.Storage) *UndoableDB {
 	udb := UndoableDB{
-		store: storage,
+		store:     storage,
+		isUndoing: false,
 	}
 
 	return &udb

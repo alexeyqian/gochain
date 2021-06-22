@@ -2,6 +2,8 @@ package network
 
 import (
 	"github.com/alexeyqian/gochain/core"
+	"github.com/alexeyqian/gochain/protocol"
+	"github.com/alexeyqian/gochain/utils"
 )
 
 func requestBlocks() {

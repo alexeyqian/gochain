@@ -2,6 +2,8 @@ package store
 
 import "encoding/binary"
 
+// TODO: add func storage.Transact(context, options, func(*DB) error) error
+
 // will instruct the storage to create an auto increment key
 const AutoIncrementKey = "_auto_increment_key_"
 
@@ -43,7 +45,7 @@ type Storage interface {
 	 */
 	Put(bucket string, key []byte, data []byte) error
 
-	// auto key is uint64
+	// auto key is int
 	PutWithAutoKey(bucket string, data []byte) error
 
 	/*
@@ -57,10 +59,10 @@ type Storage interface {
 	HasBucket(bucket string) bool
 	RowCount(bucket string) int
 
-	/* NOT USED
+	/*
 	 * delete a bucket, if not exist, do nothing
 	 */
-	//DeleteBucket(bucket string) error
+	DeleteBucket(bucket string) error
 }
 
 func IntKeyToBytes(key uint64) []byte {

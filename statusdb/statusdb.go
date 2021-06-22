@@ -9,13 +9,20 @@ import (
 )
 
 const GpoKey = "gpo_1"
+const WsoKey = "wso_1"
 
 const GpoBucket = "gpo"
+const WsoBucket = "wso"
 const AccountBucket = "account"
+const WitnessBucket = "witness"
 const ArticleBucket = "article"
 const CommentBucket = "comment"
 const VoteBucket = "vote"
+const SoftForkBucket = "softfork"
 
+// TODO: use Gpo() Wso() to read cached data
+// after undo session, need to reload cached gpo and wso
+// add functions: SetGpo() SetWso()
 type StatusDB struct {
 	udb *undodb.UndoableDB
 }
@@ -34,9 +41,11 @@ func (sdb *StatusDB) Open() {
 	if !sdb.udb.HasTable(GpoBucket) {
 		sdb.udb.CreateTable(GpoBucket)
 		sdb.udb.CreateTable(AccountBucket)
+		sdb.udb.CreateTable(WitnessBucket)
 		sdb.udb.CreateTable(ArticleBucket)
 		sdb.udb.CreateTable(CommentBucket)
 		sdb.udb.CreateTable(VoteBucket)
+		sdb.udb.CreateTable(SoftForkBucket)
 	}
 }
 
@@ -46,6 +55,11 @@ func (sdb *StatusDB) Close() {
 
 func (sdb *StatusDB) Remove() {
 	sdb.udb.Remove()
+}
+
+func (sdb *StatusDB) Truncate(table string) {
+	sdb.udb.DeleteTable(table)
+	sdb.udb.CreateTable(table)
 }
 
 // =========== gpo ================
@@ -61,6 +75,22 @@ func (sdb *StatusDB) UpdateGpo(e *entity.Gpo) error {
 func (sdb *StatusDB) GetGpo() (*entity.Gpo, error) {
 	var e entity.Gpo
 	err := sdb.getEntityByID(GpoBucket, GpoKey, &e)
+	return &e, err
+}
+
+// =========== wso ================
+
+func (sdb *StatusDB) CreateWso(e *entity.Wso) error {
+	return sdb.createEntity(WsoBucket, *e)
+}
+
+func (sdb *StatusDB) UpdateWso(e *entity.Wso) error {
+	return sdb.updateEntity(WsoBucket, *e)
+}
+
+func (sdb *StatusDB) GetWso() (*entity.Wso, error) {
+	var e entity.Wso
+	err := sdb.getEntityByID(WsoBucket, WsoKey, &e)
 	return &e, err
 }
 
@@ -93,6 +123,44 @@ func (sdb *StatusDB) GetAccounts() []*entity.Account {
 func (sdb *StatusDB) GetAccountByName(name string) (*entity.Account, error) {
 	var res *entity.Account
 	for _, acc := range sdb.GetAccounts() {
+		if acc.Name == name {
+			res = acc
+			break
+		}
+	}
+
+	return res, nil
+}
+
+// =========== witness ================
+
+func (sdb *StatusDB) CreateWitness(e *entity.Witness) error {
+	return sdb.createEntity(WitnessBucket, *e)
+}
+
+func (sdb *StatusDB) UpdateWitness(e *entity.Witness) error {
+	return sdb.updateEntity(WitnessBucket, *e)
+}
+
+func (sdb *StatusDB) GetWitness(id string) (*entity.Witness, error) {
+	var e entity.Witness
+	err := sdb.getEntityByID(WitnessBucket, id, &e)
+	return &e, err
+}
+
+func (sdb *StatusDB) GetWitnesses() []*entity.Witness {
+	var res []*entity.Witness
+	for _, value := range sdb.getAll(WitnessBucket) {
+		var e entity.Witness
+		entity.Deserialize(&e, value)
+		res = append(res, &e)
+	}
+	return res
+}
+
+func (sdb *StatusDB) GetWitnessByName(name string) (*entity.Witness, error) {
+	var res *entity.Witness
+	for _, acc := range sdb.GetWitnesses() {
 		if acc.Name == name {
 			res = acc
 			break
